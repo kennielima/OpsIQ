@@ -1,3 +1,4 @@
+using Pgvector;
 namespace OpsIq.Core.Entities;
 
 
@@ -9,6 +10,5 @@ public class Chunk
     public string Content { get; set; } = string.Empty;
     public int TokenCount { get; set; } = 0;
     public int ChunkIndex { get; set; } = 0;
-    // public string VectorEmbedding { get; set; } = string.Empty;
+    public Vector? Embedding { get; set; }
 }
-
