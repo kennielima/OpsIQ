@@ -6,6 +6,8 @@ using OpsIq.Core.Entities;
 using OpsIq.Infrastructure.Data;
 using Scalar.AspNetCore;
 using opsiq.Services;
+using OpsIq.Core.Abstractions;
+using OpsIq.Infrastructure.Embeddings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,8 @@ builder.Services.AddAuthentication()
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", null);
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsFactory>();
+
+builder.Services.AddHttpClient<IEmbeddingClient, GeminiEmbeddingClient>();
 
 var app = builder.Build();
 
