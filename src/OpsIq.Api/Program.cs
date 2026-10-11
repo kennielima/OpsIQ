@@ -8,6 +8,9 @@ using Scalar.AspNetCore;
 using opsiq.Services;
 using OpsIq.Core.Embeddings;
 using OpsIq.Infrastructure.Embeddings;
+using OpsIq.Infrastructure.Ingestion;
+using OpsIq.Infrastructure.Chunking;
+using OpsIq.Core.Chunking;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +34,9 @@ builder.Services.AddAuthentication()
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsFactory>();
 
 builder.Services.AddHttpClient<IEmbeddingClient, GeminiEmbeddingClient>();
+builder.Services.AddScoped<IChunker, FixedSizeChunker>();
+
+builder.Services.AddHostedService<DocumentIngestionWorker>();
 
 var app = builder.Build();
 
