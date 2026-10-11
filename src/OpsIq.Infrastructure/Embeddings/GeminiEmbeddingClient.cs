@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Configuration;
-using OpsIq.Core.Abstractions;
+using OpsIq.Core.Embeddings;
 
 namespace OpsIq.Infrastructure.Embeddings;
 

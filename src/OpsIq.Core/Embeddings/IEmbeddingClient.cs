@@ -1,4 +1,4 @@
-namespace OpsIq.Core.Abstractions;
+namespace OpsIq.Core.Embeddings;
 
 public interface IEmbeddingClient
 {

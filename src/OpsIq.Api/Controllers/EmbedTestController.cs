@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OpsIq.Core.Abstractions;
+using OpsIq.Core.Embeddings;
 
 namespace OpsIq.Api.Controllers;
 

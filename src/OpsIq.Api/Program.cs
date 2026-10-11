@@ -6,7 +6,7 @@ using OpsIq.Core.Entities;
 using OpsIq.Infrastructure.Data;
 using Scalar.AspNetCore;
 using opsiq.Services;
-using OpsIq.Core.Abstractions;
+using OpsIq.Core.Embeddings;
 using OpsIq.Infrastructure.Embeddings;
 
 var builder = WebApplication.CreateBuilder(args);
