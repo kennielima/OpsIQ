@@ -8,7 +8,6 @@ namespace OpsIq.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class DocumentsController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -47,6 +46,7 @@ public class DocumentsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<ActionResult<List<Document>>> ListDocuments()
     {
         var user = await _userManager.GetUserAsync(User);
@@ -57,6 +57,7 @@ public class DocumentsController : ControllerBase
 
     [HttpGet]
     [Route("{id}")]
+    [Authorize]
     public async Task<ActionResult<Document>> GetDocument(Guid id)
     {
         var user = await _userManager.GetUserAsync(User);
@@ -68,6 +69,7 @@ public class DocumentsController : ControllerBase
 
     [HttpDelete]
     [Route("{id}")]
+    [Authorize]
     public async Task<IActionResult> DeleteDocument(Guid id)
     {
         var user = await _userManager.GetUserAsync(User);
