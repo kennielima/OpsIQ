@@ -11,6 +11,8 @@ using OpsIq.Infrastructure.Embeddings;
 using OpsIq.Infrastructure.Ingestion;
 using OpsIq.Infrastructure.Chunking;
 using OpsIq.Core.Chunking;
+using OpsIq.Core.Completions;
+using OpsIq.Infrastructure.Completions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,7 @@ builder.Services.AddScoped<IChunker, FixedSizeChunker>();
 
 builder.Services.AddHostedService<DocumentIngestionWorker>();
 
+builder.Services.AddHttpClient<ICompletionClient, GeminiCompletionClient>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

@@ -3,6 +3,7 @@ using opsiq.Services;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using OpsIq.Core.Completions;
 
 namespace opsiq.Controllers;
 
@@ -11,9 +12,11 @@ namespace opsiq.Controllers;
 public class QueryController : ControllerBase
 {
     private readonly QueryService _queryService;
-    public QueryController(QueryService queryService)
+    private readonly ICompletionClient _completionClient;
+    public QueryController(QueryService queryService, ICompletionClient completionClient)
     {
         _queryService = queryService;
+        _completionClient = completionClient;
     }
 
     [HttpGet("protected")]
@@ -28,6 +31,15 @@ public class QueryController : ControllerBase
     {
         var prompt = request.Question ?? string.Empty;
         var answer = await _queryService.GetQuestionAsync(prompt);
+        return Ok(answer);
+    }
+    [HttpPost]
+    [Route("query/ask")]
+    public async Task<ActionResult> QueryAsync([FromBody] RequestDto request)
+    {
+        var prompt = request.Question ?? string.Empty;
+        // var prompt = "what is a dependency injection";
+        var answer = await _completionClient.CompleteAsync(prompt);
         return Ok(answer);
     }
 }
