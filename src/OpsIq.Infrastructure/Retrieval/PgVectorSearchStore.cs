@@ -21,7 +21,6 @@ public class PgVectorSearchStore : IVectorSearchStore
     public async Task<Chunk[]> VectorSearch(string question, Guid tenantId)
     {
         var vectors = await _embeddings.EmbedAsync([question]);
-        Console.WriteLine(vectors);
         var queryEmbedding = vectors[0];
 
         var result = await _context.Chunks
@@ -32,5 +31,3 @@ public class PgVectorSearchStore : IVectorSearchStore
         return result;
     }
 }
-// vector search. When a question comes in, we embed it, 
-// then find the top-K most similar chunks in the DB using pgvector's cosine distance. 

@@ -30,6 +30,7 @@ public class GeminiCompletionClient : ICompletionClient
         };
 
         var response = await _httpClient.PostAsJsonAsync(url, body, ct);
+        // var raw = await response.Content.ReadAsStringAsync();
         response.EnsureSuccessStatusCode();
         var parsed = await response.Content.ReadFromJsonAsync<GeminiCompletionResponse>(cancellationToken: ct);
 
