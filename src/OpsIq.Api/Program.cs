@@ -5,7 +5,7 @@ using OpsIq.Api.Authentication;
 using OpsIq.Core.Entities;
 using OpsIq.Infrastructure.Data;
 using Scalar.AspNetCore;
-using opsiq.Services;
+using OpsIq.Services;
 using OpsIq.Core.Embeddings;
 using OpsIq.Infrastructure.Embeddings;
 using OpsIq.Infrastructure.Ingestion;
@@ -13,6 +13,8 @@ using OpsIq.Infrastructure.Chunking;
 using OpsIq.Core.Chunking;
 using OpsIq.Core.Completions;
 using OpsIq.Infrastructure.Completions;
+using OpsIq.Core.Retrieval;
+using OpsIq.Infrastructure.Retrieval;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,13 +36,13 @@ builder.Services.AddAuthentication()
     .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", null);
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsFactory>();
-
 builder.Services.AddHttpClient<IEmbeddingClient, GeminiEmbeddingClient>();
 builder.Services.AddScoped<IChunker, FixedSizeChunker>();
-
 builder.Services.AddHostedService<DocumentIngestionWorker>();
-
 builder.Services.AddHttpClient<ICompletionClient, GeminiCompletionClient>();
+builder.Services.AddScoped<IVectorSearchStore, PgVectorSearchStore>();
+builder.Services.AddScoped<RagService>();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())

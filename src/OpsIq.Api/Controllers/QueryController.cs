@@ -1,22 +1,18 @@
-using opsiq.Models;
-using opsiq.Services;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using OpsIq.Core.Completions;
+using OpsIq.Core.Retrieval;
+using OpsIq.Models;
 
-namespace opsiq.Controllers;
+namespace OpsIq.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class QueryController : ControllerBase
 {
-    private readonly QueryService _queryService;
-    private readonly ICompletionClient _completionClient;
-    public QueryController(QueryService queryService, ICompletionClient completionClient)
+    private readonly RagService _ragService;
+    public QueryController(RagService ragService)
     {
-        _queryService = queryService;
-        _completionClient = completionClient;
+        _ragService = ragService;
     }
 
     [HttpGet("protected")]
@@ -25,21 +21,15 @@ public class QueryController : ControllerBase
     {
         return Ok("You have a valid API key.");
     }
-    [HttpPost]
-    // [Route("ask")]
-    public async Task<ActionResult> GetTaskAsync([FromBody] RequestDto request)
-    {
-        var prompt = request.Question ?? string.Empty;
-        var answer = await _queryService.GetQuestionAsync(prompt);
-        return Ok(answer);
-    }
-    [HttpPost]
+    [HttpPost("ask")]
     [Route("query/ask")]
+    // [Authorize(AuthenticationSchemes = "ApiKey")]
+    [Authorize]
     public async Task<ActionResult> QueryAsync([FromBody] RequestDto request)
     {
-        var prompt = request.Question ?? string.Empty;
-        // var prompt = "what is a dependency injection";
-        var answer = await _completionClient.CompleteAsync(prompt);
+        var tenantId = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantId)) return Ok("No tenant");
+        var answer = await _ragService.AnswerQuestionAsync(request.Question, Guid.Parse(tenantId));
         return Ok(answer);
     }
 }

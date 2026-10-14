@@ -1,4 +1,4 @@
-namespace opsiq.Models;
+namespace OpsIq.Models;
 
 using System.ComponentModel.DataAnnotations;
 public class RequestDto

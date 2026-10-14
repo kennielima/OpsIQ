@@ -1,4 +1,4 @@
-namespace opsiq.Services;
+namespace OpsIq.Services;
 
 public class QueryService
 {
