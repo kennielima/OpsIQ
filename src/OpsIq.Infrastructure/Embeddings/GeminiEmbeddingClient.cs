@@ -1,4 +1,6 @@
-using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using OpsIq.Core.Embeddings;
 
@@ -31,14 +33,32 @@ public class GeminiEmbeddingClient : IEmbeddingClient
                 },
                 outputDimensionality = 768
             };
-            var response = await _httpClient.PostAsJsonAsync(url, body, ct);
-            response.EnsureSuccessStatusCode();
-            var parsed = await response.Content.ReadFromJsonAsync<GeminiEmbedResponse>(cancellationToken: ct);
+            var json = JsonSerializer.Serialize(body);
+            var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+
+            var response = await _httpClient.SendAsync(request, ct);
+            var responseBody = await response.Content.ReadAsStringAsync(ct);
+
+            if (!response.IsSuccessStatusCode) throw new HttpRequestException($"Gemini embed failed: {response.StatusCode} - {responseBody}");
+            var parsed = JsonSerializer.Deserialize<GeminiEmbedResponse>(responseBody);
             results.Add(parsed!.Embedding.Values);
         }
         return results;
     }
-    private sealed record GeminiEmbedResponse(GeminiEmbedding Embedding);
-    private sealed record GeminiEmbedding(float[] Values);
+    private sealed record GeminiEmbedResponse(
+        [property: JsonPropertyName("embedding")] GeminiEmbedding Embedding
+    );
+    private sealed record GeminiEmbedding(
+        [property: JsonPropertyName("values")] float[] Values
+    );
+    // private sealed class GeminiEmbedResponse
+    // {
+    //     [JsonPropertyName("embedding")]
+    //     public GeminiEmbedding Embedding { get; init; }
+    //     public GeminiEmbedResponse(GeminiEmbedding embedding) { Embedding = embedding; }
+    // }
 }
 
