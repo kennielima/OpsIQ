@@ -15,6 +15,7 @@ using OpsIq.Core.Completions;
 using OpsIq.Infrastructure.Completions;
 using OpsIq.Core.Retrieval;
 using OpsIq.Infrastructure.Retrieval;
+using OpsIq.Api.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +43,8 @@ builder.Services.AddHostedService<DocumentIngestionWorker>();
 builder.Services.AddHttpClient<ICompletionClient, GeminiCompletionClient>();
 builder.Services.AddScoped<IVectorSearchStore, PgVectorSearchStore>();
 builder.Services.AddScoped<RagService>();
-
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -82,7 +84,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
