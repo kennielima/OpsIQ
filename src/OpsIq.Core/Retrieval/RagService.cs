@@ -12,10 +12,10 @@ public class RagService
         _completion = completion;
         _vectorSearch = vectorSearch;
     }
-    public async Task<string> AnswerQuestionAsync(string question, Guid tenantId)
+    public async Task<(string answer, Chunk[] chunks)> AnswerQuestionAsync(string question, Guid tenantId)
     {
-        var vectorResult = await _vectorSearch.VectorSearch(question, tenantId);
-        var chunkText = string.Join("\n---\n", vectorResult.Select(c => c.Content));
+        var chunks = await _vectorSearch.VectorSearch(question, tenantId);
+        var chunkText = string.Join("\n---\n", chunks.Select(c => c.Content));
 
         var prompt = $"""
         You are a policy assistant. Use ONLY the chunks below to answer.
@@ -25,6 +25,7 @@ public class RagService
         """;
 
         var answer = await _completion.CompleteAsync(prompt);
-        return answer;
+        return (answer, chunks);
+        ;
     }
 }
