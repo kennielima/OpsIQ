@@ -4,8 +4,8 @@ namespace OpsIq.Core.Retrieval;
 
 public interface IVectorSearchStore
 {
-    Task<Chunk[]> VectorSearch(
-        string questionEmbedding,
+    Task<ScoredChunk[]> VectorSearch(
+        string question,
         Guid tenantId
     );
 }

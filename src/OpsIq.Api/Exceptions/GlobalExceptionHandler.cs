@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
-
+using System.Net;
 namespace OpsIq.Api.Exceptions;
 
 public class GlobalExceptionHandler : IExceptionHandler
@@ -13,8 +13,9 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         var (status, message) = ex switch
         {
+            HttpRequestException { StatusCode: HttpStatusCode.TooManyRequests } => (429, "Too many requests, try later."),
             HttpRequestException => (503, "AI service unavailable, try again."),
-            _ => (500, "Something went wrong.")
+            _ => (500, "Something went wrong."),
         };
 
         if (ex is HttpRequestException)

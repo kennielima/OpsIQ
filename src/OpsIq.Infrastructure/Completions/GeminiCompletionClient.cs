@@ -9,11 +9,14 @@ public class GeminiCompletionClient : ICompletionClient
 {
     private readonly HttpClient _httpClient;
     private readonly string _geminiApiKey;
+    private readonly ILogger<GeminiCompletionClient> _logger;
 
-    public GeminiCompletionClient(IConfiguration configuration, HttpClient httpClient)
+
+    public GeminiCompletionClient(IConfiguration configuration, HttpClient httpClient, ILogger<GeminiCompletionClient> logger)
     {
         _httpClient = httpClient;
         _geminiApiKey = configuration["Gemini:ApiKey"]!;
+        _logger = logger;
     }
     public async Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
     {
@@ -30,7 +33,12 @@ public class GeminiCompletionClient : ICompletionClient
         };
 
         var response = await _httpClient.PostAsJsonAsync(url, body, ct);
-        // var raw = await response.Content.ReadAsStringAsync();
+
+        var raw = await response.Content.ReadAsStringAsync();
+        if
+        (!response.IsSuccessStatusCode)
+            _logger.LogError("Gemini {Status}: {Body}", response.StatusCode, raw);
+
         response.EnsureSuccessStatusCode();
         var parsed = await response.Content.ReadFromJsonAsync<GeminiCompletionResponse>(cancellationToken: ct);
 

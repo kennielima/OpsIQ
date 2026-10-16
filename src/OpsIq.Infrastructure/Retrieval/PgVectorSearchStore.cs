@@ -18,16 +18,24 @@ public class PgVectorSearchStore : IVectorSearchStore
         _embeddings = embeddings;
         _context = context;
     }
-    public async Task<Chunk[]> VectorSearch(string question, Guid tenantId)
+    public async Task<ScoredChunk[]> VectorSearch(string question, Guid tenantId)
     {
         var vectors = await _embeddings.EmbedAsync([question]);
         var queryEmbedding = vectors[0];
 
-        var result = await _context.Chunks
-            .Where(c => c.TenantId == tenantId)
-            .OrderBy(c => c.Embedding!.CosineDistance(new Vector(queryEmbedding))) // use pgvector's cosine distance
+        var raw = await _context.Chunks
+            .Where(c => c.TenantId == tenantId && c.Embedding != null)
+            .Select(c => new
+            {
+                Chunk = c,
+                Score = c.Embedding!.CosineDistance(new Vector(queryEmbedding))
+            })
+            .OrderBy(x => x.Score)
             .Take(5)
             .ToArrayAsync();
+
+        var result = raw.Select(x => new ScoredChunk(x.Chunk, (float)x.Score)).ToArray();
+
         return result;
     }
 }

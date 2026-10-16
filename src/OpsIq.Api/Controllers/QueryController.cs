@@ -77,9 +77,9 @@ public class QueryController : ControllerBase
                 Id = Guid.NewGuid(),
                 TenantId = Guid.Parse(tenantId),
                 MessageId = answer.Id,
-                ChunkId = chunks[i].Id,
+                ChunkId = chunks[i].Chunk.Id,
                 Rank = i,
-                // Score = 1
+                Score = chunks[i].Score
             };
             _context.Citations.Add(citation);
         }
@@ -90,10 +90,11 @@ public class QueryController : ControllerBase
             answer = ragResult.answer,
             citations = ragResult.chunks.Select((c, i) => new
             {
-                chunkId = c.Id,
-                documentId = c.DocumentId,
-                content = c.Content,
-                rank = i
+                chunkId = c.Chunk.Id,
+                documentId = c.Chunk.DocumentId,
+                content = c.Chunk.Content,
+                rank = i,
+                Score = c.Score
             })
         });
     }
