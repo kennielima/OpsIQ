@@ -7,6 +7,8 @@ using OpsIq.Core.Chunking;
 using OpsIq.Core.Entities;
 using OpsIq.Infrastructure.Data;
 using Pgvector;
+using UglyToad.PdfPig;
+using System.Text;
 
 namespace OpsIq.Infrastructure.Ingestion;
 
@@ -52,7 +54,21 @@ public class DocumentIngestionWorker : BackgroundService
         {
             try
             {
-                var text = await File.ReadAllTextAsync(doc.StoragePath, ct);
+                var ext = Path.GetExtension(doc.StoragePath)?.ToLowerInvariant();
+                string text;
+                if (ext == ".pdf")
+                {
+                    using var pdf = PdfDocument.Open(doc.StoragePath);
+                    var sb = new StringBuilder();
+                    foreach (var page in pdf.GetPages())
+                        sb.AppendLine(page.Text);
+                    text = sb.ToString();
+                }
+                else
+                {
+                    text = await File.ReadAllTextAsync(doc.StoragePath, ct);
+                }
+
                 var chunks = chunker.Chunk(text);
                 if (chunks.Count == 0)
                 {

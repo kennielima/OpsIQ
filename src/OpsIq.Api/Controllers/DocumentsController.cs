@@ -25,9 +25,15 @@ public class DocumentsController : ControllerBase
         var tenantId = User.FindFirst("TenantId")?.Value;
         if (string.IsNullOrEmpty(tenantId)) return BadRequest("No tenant");
         if (file == null || file.Length == 0) return BadRequest("No file");
+
+        var allowedExtensions = new[] { ".pdf", ".md", ".txt" };
+        var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        if (!allowedExtensions.Contains(extension)) return BadRequest("Unsupported file type");
+
         var documentId = Guid.NewGuid();
         var path = Path.Combine("uploads", $"{documentId}{Path.GetExtension(file.FileName)}");
         Directory.CreateDirectory("uploads");
+
         using var stream = System.IO.File.Create(path);
         await file.CopyToAsync(stream);
         var doc = new Document
