@@ -3,7 +3,6 @@ bin/
 *.user
 .vs/
 .vscode/
-*.md
 docs/
 *.pdf
 uploads/
