@@ -16,6 +16,7 @@ using OpsIq.Infrastructure.Completions;
 using OpsIq.Core.Retrieval;
 using OpsIq.Infrastructure.Retrieval;
 using OpsIq.Api.Exceptions;
+using OpsIq.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,6 +46,11 @@ builder.Services.AddScoped<IVectorSearchStore, PgVectorSearchStore>();
 builder.Services.AddScoped<RagService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+// builder.Services.ConfigureApplicationCookie(opts =>
+//   {
+//       opts.ExpireTimeSpan = TimeSpan.FromHours(8);
+//       opts.SlidingExpiration = true;
+//   });
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -89,5 +95,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.MapMeEndpoints();
 app.Run();
