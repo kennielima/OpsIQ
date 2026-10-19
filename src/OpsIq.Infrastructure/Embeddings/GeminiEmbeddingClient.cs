@@ -17,9 +17,9 @@ public class GeminiEmbeddingClient : IEmbeddingClient
 
     public async Task<IReadOnlyList<float[]>> EmbedAsync(IEnumerable<string> texts, CancellationToken ct = default)
     {
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={_geminiApiKey}";
-        var results = new List<float[]>();
-
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents?key={_geminiApiKey}";
+        // var results = new List<float[]>();
+        var requests = new List<object>();
         foreach (var t in texts)
         {
             var body = new
@@ -31,13 +31,14 @@ public class GeminiEmbeddingClient : IEmbeddingClient
                 },
                 outputDimensionality = 768
             };
-            var response = await _httpClient.PostAsJsonAsync(url, body, ct);
-            response.EnsureSuccessStatusCode();
-            var parsed = await response.Content.ReadFromJsonAsync<GeminiEmbedResponse>(cancellationToken: ct);
-            results.Add(parsed!.Embedding.Values);
+            requests.Add(body);
         }
-        return results;
+
+        var response = await _httpClient.PostAsJsonAsync(url, new { requests }, ct);
+        response.EnsureSuccessStatusCode();
+        var parsed = await response.Content.ReadFromJsonAsync<GeminiEmbedResponse>(cancellationToken: ct);
+        return parsed!.Embeddings.Select(e => e.Values).ToList();
     }
-    private sealed record GeminiEmbedResponse(GeminiEmbedding Embedding);
+    private sealed record GeminiEmbedResponse(GeminiEmbedding[] Embeddings);
     private sealed record GeminiEmbedding(float[] Values);
 }
