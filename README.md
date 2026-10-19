@@ -115,12 +115,3 @@ A super-admin user is auto-provisioned on first run from the env config.
 | `/api/tenants/{id}/users` | POST                | ApiKey or Cookie (Admin) |
 | `/api/documents`          | GET / POST / DELETE | Cookie                   |
 | `/api/query/ask`          | POST                | Cookie                   |
-
-## Roadmap
-
-- [ ] PDF ingestion (`UglyToad.PdfPig`)
-- [ ] `/api/me` + password reset
-- [ ] v1.1 widget surface (`pk_` keys, CORS, rate limiting, anonymous sessions)
-- [ ] Eval harness (precision@k, grounding faithfulness)
-- [ ] Admin frontend
-- [ ] AWS deployment
