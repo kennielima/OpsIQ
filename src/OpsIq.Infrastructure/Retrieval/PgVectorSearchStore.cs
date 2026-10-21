@@ -23,18 +23,22 @@ public class PgVectorSearchStore : IVectorSearchStore
         var vectors = await _embeddings.EmbedAsync([question]);
         var queryEmbedding = vectors[0];
 
-        var raw = await _context.Chunks
+        var query = _context.Chunks
             .Where(c => c.TenantId == tenantId && c.Embedding != null)
-            .Join(_context.Documents, c => c.DocumentId, d => d.Id, (c, d) => new { Chunk = c, Doc = d }) // { Chunk, Doc }
-            .Where(x => !publicOnly || x.Doc.Visibility == DocumentVisibility.Public)
-            .Select(c => new
-            {
-                Chunk = c.Chunk,
-                Score = c.Chunk.Embedding!.CosineDistance(new Vector(queryEmbedding))
-            })
-            .OrderBy(x => x.Score)
-            .Take(5)
-            .ToArrayAsync();
+            .Join(_context.Documents, c => c.DocumentId, d => d.Id, (c, d) => new { Chunk = c, Doc = d });
+
+        if (publicOnly)
+            query = query.Where(x => x.Doc.Visibility == DocumentVisibility.Public);
+
+        var raw = await query
+        .Select(c => new
+        {
+            Chunk = c.Chunk,
+            Score = c.Chunk.Embedding!.CosineDistance(new Vector(queryEmbedding))
+        })
+        .OrderBy(x => x.Score)
+        .Take(5)
+        .ToArrayAsync();
 
         var result = raw.Select(x => new ScoredChunk(x.Chunk, (float)x.Score)).ToArray();
 
