@@ -22,13 +22,6 @@ Built:
 - Role-based authorization (SuperAdmin / Admin / User)
 - Global exception handler with structured upstream error logging
 
-Planned next:
-
-- PDF ingestion (clean text, no OCR)
-- Customer-facing widget (v1.1): `pk_` keys, CORS, rate limiting, anonymous sessions
-- Admin frontend (login, docs upload, conversations)
-- AWS deployment (ECS Fargate, RDS Postgres + pgvector, S3, Secrets Manager)
-
 ## Architecture
 
 Three-project solution with a strict reference graph — `Core` has zero infrastructure dependencies, enforced by the project graph itself, not convention.
@@ -115,3 +108,5 @@ A super-admin user is auto-provisioned on first run from the env config.
 | `/api/tenants/{id}/users` | POST                | ApiKey or Cookie (Admin) |
 | `/api/documents`          | GET / POST / DELETE | Cookie                   |
 | `/api/query/ask`          | POST                | Cookie                   |
+| `/api/me`                 | GET                 | Cookie                   |
+| `/api/me/resetpassword`   | GET                 | Cookie                   |

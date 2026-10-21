@@ -6,6 +6,7 @@ public interface IVectorSearchStore
 {
     Task<ScoredChunk[]> VectorSearch(
         string question,
-        Guid tenantId
+        Guid tenantId,
+        bool publicOnly = false
     );
 }

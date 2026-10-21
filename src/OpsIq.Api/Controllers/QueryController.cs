@@ -39,7 +39,7 @@ public class QueryController : ControllerBase
         var userId = _userManager.GetUserId(User);
         if (string.IsNullOrEmpty(tenantId)) return Unauthorized("No tenant");
 
-        var ragResult = await _ragService.AnswerQuestionAsync(request.Question, Guid.Parse(tenantId));
+        var ragResult = await _ragService.AnswerQuestionAsync(request.Question, Guid.Parse(tenantId), false);
 
         var conversation = new Conversation
         {

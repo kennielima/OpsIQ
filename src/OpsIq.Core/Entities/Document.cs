@@ -12,5 +12,6 @@ public class Document
     public DateTime UploadedAt { get; set; }
     public DateTime? ProcessedAt { get; set; } = null;
     public bool IsDeleted { get; set; }
+    public DocumentVisibility Visibility { get; set; } = DocumentVisibility.Internal;
 }
 

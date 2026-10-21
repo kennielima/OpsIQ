@@ -16,9 +16,9 @@ public class RagService
         _vectorSearch = vectorSearch;
         _logger = logger;
     }
-    public async Task<(string answer, ScoredChunk[] chunks)> AnswerQuestionAsync(string question, Guid tenantId)
+    public async Task<(string answer, ScoredChunk[] chunks)> AnswerQuestionAsync(string question, Guid tenantId, bool publicOnly)
     {
-        var chunks = await _vectorSearch.VectorSearch(question, tenantId);
+        var chunks = await _vectorSearch.VectorSearch(question, tenantId, publicOnly);
         _logger.LogInformation("Top score: {Score}", chunks[0].Score);
         if (chunks.Length == 0 || chunks[0].Score > 0.5f)
             return ("I don't have information on that in the documents.", []);
