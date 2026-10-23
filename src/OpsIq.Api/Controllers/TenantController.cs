@@ -37,6 +37,7 @@ public class TenantsController : ControllerBase
             Id = Guid.NewGuid(),
             Name = createTenantDto.TenantName,
             Slug = createTenantDto.TenantSlug,
+            CreatedAt = DateTime.UtcNow
         };
         _context.Tenants.Add(tenant);
 
@@ -44,7 +45,8 @@ public class TenantsController : ControllerBase
         {
             Id = Guid.NewGuid(),
             TenantId = tenant.Id,
-            HashedKey = hashed
+            HashedKey = hashed,
+            CreatedAt = DateTime.UtcNow
         };
         _context.ApiKeys.Add(apiKey);
 
@@ -115,7 +117,8 @@ public class TenantsController : ControllerBase
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             HashedKey = hashed,
-            Type = ApiKeyType.PublicKey
+            Type = ApiKeyType.PublicKey,
+            CreatedAt = DateTime.UtcNow
         };
         _context.ApiKeys.Add(apiKey);
         await _context.SaveChangesAsync();

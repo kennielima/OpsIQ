@@ -46,6 +46,7 @@ public class QueryController : ControllerBase
             Id = Guid.NewGuid(),
             TenantId = Guid.Parse(tenantId),
             UserId = Guid.Parse(userId!),
+            StartedAt = DateTime.UtcNow
         };
         _context.Conversations.Add(conversation);
 
@@ -55,7 +56,8 @@ public class QueryController : ControllerBase
             TenantId = Guid.Parse(tenantId),
             ConversationId = conversation.Id,
             Role = MessageRole.User,
-            Content = request.Question
+            Content = request.Question,
+            CreatedAt = DateTime.UtcNow
         };
         _context.Messages.Add(question);
 
@@ -65,7 +67,8 @@ public class QueryController : ControllerBase
             TenantId = Guid.Parse(tenantId),
             ConversationId = conversation.Id,
             Role = MessageRole.Assistant,
-            Content = ragResult.answer
+            Content = ragResult.answer,
+            CreatedAt = DateTime.UtcNow
         };
         _context.Messages.Add(answer);
 
