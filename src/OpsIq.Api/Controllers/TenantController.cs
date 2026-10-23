@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OpsIq.Api.Authentication;
 using OpsIq.Api.Models;
 using OpsIq.Core.Entities;
@@ -94,5 +95,47 @@ public class TenantsController : ControllerBase
         var result = await _userManager.CreateAsync(user, createUserDto.Password);
         if (!result.Succeeded) return BadRequest(result.Errors.Select(e => e.Description));
         return Ok(new { user.Id, user.Email, user.DisplayName, user.TenantId });
+    }
+
+    [HttpPost]
+    [Route("{tenantId}/keys")]
+    [Authorize(AuthenticationSchemes = "ApiKey")]
+    public async Task<IActionResult> MintKey(Guid tenantId)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var randomBytes = RandomNumberGenerator.GetBytes(32);
+        var rawKey = "pk_" + Convert.ToBase64String(randomBytes)
+            .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        var hashed = PublicKeyAuthenticationHandler.HashApiKey(rawKey);
+
+        var apiKey = new ApiKey
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            HashedKey = hashed,
+            Type = ApiKeyType.PublicKey
+        };
+        _context.ApiKeys.Add(apiKey);
+        await _context.SaveChangesAsync();
+        return Ok(new { apiKey.Id, RawKey = rawKey });
+    }
+
+    [HttpDelete]
+    [Route("{tenantId}/keys/{keyId}")]
+    [Authorize(AuthenticationSchemes = "ApiKey")]
+    public async Task<IActionResult> RevokeKey(Guid tenantId, Guid keyId)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+        var key = await _context.ApiKeys.FirstOrDefaultAsync(key => keyId == key.Id && tenantId == key.TenantId);
+        if (key == null) return NotFound();
+        if (key.Type != ApiKeyType.PublicKey) return BadRequest("Cannot revoke a secret key.");
+
+        key.RevokedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
     }
 }
