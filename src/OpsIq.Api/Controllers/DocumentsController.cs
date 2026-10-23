@@ -20,7 +20,7 @@ public class DocumentsController : ControllerBase
     }
     [HttpPost]
     [Authorize(AuthenticationSchemes = "ApiKey")]
-    public async Task<ActionResult<Document>> Upload(IFormFile file)
+    public async Task<ActionResult<Document>> Upload(IFormFile file, [FromForm] DocumentVisibility visibility)
     {
         var tenantId = User.FindFirst("TenantId")?.Value;
         if (string.IsNullOrEmpty(tenantId)) return BadRequest("No tenant");
@@ -44,11 +44,25 @@ public class DocumentsController : ControllerBase
             StoragePath = path,
             Status = DocumentStatus.Processing,
             UploadedAt = DateTime.UtcNow,
-            ContentType = file.ContentType
+            ContentType = file.ContentType,
+            Visibility = visibility
         };
         _context.Documents.Add(doc);
         await _context.SaveChangesAsync();
         return Ok(doc);
+    }
+
+    [HttpPatch("{id}")]
+    [Authorize(AuthenticationSchemes = "ApiKey")]
+    public async Task<ActionResult> UpdateDocument(Guid id, [FromForm] DocumentVisibility visibility)
+    {
+        var tenantId = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantId)) return BadRequest("No tenant");
+        var document = await _context.Documents.FirstOrDefaultAsync(d => d.Id == id && Guid.Parse(tenantId) == d.TenantId && !d.IsDeleted);
+        if (document == null) return BadRequest("No document");
+        document.Visibility = visibility;
+        await _context.SaveChangesAsync();
+        return Ok(document);
     }
 
     [HttpGet]
