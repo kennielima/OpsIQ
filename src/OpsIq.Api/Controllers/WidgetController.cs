@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using OpsIq.Core.Entities;
 using OpsIq.Core.Retrieval;
@@ -24,6 +25,7 @@ public class WidgetController : ControllerBase
 
     [HttpPost("query")]
     [Authorize(AuthenticationSchemes = "PublicKey")]
+    [EnableRateLimiting("widget")]
     public async Task<IActionResult> WidgetQueryAsync([FromBody] RequestDto dto)
     {
         var tenantId = User.FindFirst("TenantId")?.Value;

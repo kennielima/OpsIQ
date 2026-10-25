@@ -17,6 +17,7 @@ using OpsIq.Core.Retrieval;
 using OpsIq.Infrastructure.Retrieval;
 using OpsIq.Api.Exceptions;
 using OpsIq.Api.Endpoints;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +53,26 @@ builder.Services.AddProblemDetails();
 //       opts.ExpireTimeSpan = TimeSpan.FromHours(8);
 //       opts.SlidingExpiration = true;
 //   });
+
+builder.Services.AddRateLimiter(options =>
+
+    {
+        options.AddPolicy("widget", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: httpContext.Request.Headers["Authorization"].ToString() + httpContext.Connection.RemoteIpAddress,
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1)
+        }
+    ));
+        options.OnRejected = async (context, ct) =>
+        {
+            context.HttpContext.Response.StatusCode = 429;
+            await context.HttpContext.Response.WriteAsync("Rate limit exceeded.", ct);
+        };
+    });
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -92,6 +113,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
