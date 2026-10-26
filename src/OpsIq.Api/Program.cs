@@ -128,6 +128,7 @@ app.UseHttpsRedirection();
 app.UseExceptionHandler();
 app.UseRateLimiter();
 app.UseCors("widget");
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
