@@ -141,4 +141,19 @@ public class TenantsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("/{tenantId}/origins")]
+    [Authorize(AuthenticationSchemes = "ApiKey")]
+    public async Task<IActionResult> AddOrigins(Guid tenantId, [FromBody] string[] origins)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        if (tenant == null) return NotFound();
+        tenant.AllowedOrigins = origins.ToList();
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
