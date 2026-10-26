@@ -73,6 +73,19 @@ builder.Services.AddRateLimiter(options =>
         };
     });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("widget", policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+        {
+            return true;
+        })
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -114,6 +127,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseExceptionHandler();
 app.UseRateLimiter();
+app.UseCors("widget");
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -16,7 +16,6 @@ public class WidgetController : ControllerBase
     private readonly AppDbContext _appDbContext;
     private readonly RagService _ragService;
 
-
     public WidgetController(AppDbContext appDbContext, RagService ragService)
     {
         _appDbContext = appDbContext;
@@ -30,6 +29,12 @@ public class WidgetController : ControllerBase
     {
         var tenantId = User.FindFirst("TenantId")?.Value;
         if (string.IsNullOrEmpty(tenantId)) return Unauthorized("No tenant");
+
+        var origin = Request.Headers["Origin"].ToString();
+        var tenant = await _appDbContext.Tenants.FirstOrDefaultAsync(t => t.Id ==
+          Guid.Parse(tenantId));
+        if (tenant?.AllowedOrigins != null && !tenant.AllowedOrigins.Contains(origin))
+            return StatusCode(403, "Origin not allowed.");
 
         if (dto.Question.Length > 500) return
             BadRequest("Question too long.");
