@@ -18,6 +18,7 @@ using OpsIq.Infrastructure.Retrieval;
 using OpsIq.Api.Exceptions;
 using OpsIq.Api.Endpoints;
 using System.Threading.RateLimiting;
+using OpsIq.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,6 +86,7 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod();
     });
 });
+builder.Services.AddScoped<WidgetOriginFilter>();
 
 var app = builder.Build();
 

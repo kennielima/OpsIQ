@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using OpsIq.Api.Filters;
 using OpsIq.Core.Entities;
 using OpsIq.Core.Retrieval;
 using OpsIq.Infrastructure.Data;
@@ -25,16 +26,11 @@ public class WidgetController : ControllerBase
     [HttpPost("query")]
     [Authorize(AuthenticationSchemes = "PublicKey")]
     [EnableRateLimiting("widget")]
+    [ServiceFilter(typeof(WidgetOriginFilter))]
     public async Task<IActionResult> WidgetQueryAsync([FromBody] RequestDto dto)
     {
         var tenantId = User.FindFirst("TenantId")?.Value;
         if (string.IsNullOrEmpty(tenantId)) return Unauthorized("No tenant");
-
-        var origin = Request.Headers["Origin"].ToString();
-        var tenant = await _appDbContext.Tenants.FirstOrDefaultAsync(t => t.Id ==
-          Guid.Parse(tenantId));
-        if (tenant?.AllowedOrigins != null && !tenant.AllowedOrigins.Contains(origin))
-            return StatusCode(403, "Origin not allowed.");
 
         if (dto.Question.Length > 500) return
             BadRequest("Question too long.");
