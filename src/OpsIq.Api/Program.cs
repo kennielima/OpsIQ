@@ -19,6 +19,7 @@ using OpsIq.Api.Exceptions;
 using OpsIq.Api.Endpoints;
 using System.Threading.RateLimiting;
 using OpsIq.Api.Filters;
+using OpsIq.Core.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,6 +88,9 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddScoped<WidgetOriginFilter>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 
 var app = builder.Build();
 

@@ -31,7 +31,7 @@ public class ApiKeyAuthenticationHandler : AuthenticationHandler<AuthenticationS
 
         var hashedKey = HashApiKey(authHeader);
 
-        var apiKey = await _context.ApiKeys.FirstOrDefaultAsync(key => key.HashedKey == hashedKey);
+        var apiKey = await _context.ApiKeys.IgnoreQueryFilters().FirstOrDefaultAsync(key => key.HashedKey == hashedKey);
         if (apiKey == null)
             return AuthenticateResult.Fail("Invalid API key.");
 

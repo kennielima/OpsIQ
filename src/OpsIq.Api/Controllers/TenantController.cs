@@ -132,7 +132,7 @@ public class TenantsController : ControllerBase
     {
         var claimTenantId = User.FindFirst("TenantId")?.Value;
         if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
-        var key = await _context.ApiKeys.FirstOrDefaultAsync(key => keyId == key.Id && tenantId == key.TenantId);
+        var key = await _context.ApiKeys.FirstOrDefaultAsync(key => keyId == key.Id);
         if (key == null) return NotFound();
         if (key.Type != ApiKeyType.PublicKey) return BadRequest("Cannot revoke a secret key.");
 

@@ -47,6 +47,7 @@ public class DocumentIngestionWorker : BackgroundService
         var chunker = scope.ServiceProvider.GetRequiredService<IChunker>();
         var embeddings = scope.ServiceProvider.GetRequiredService<IEmbeddingClient>();
         var pending = await db.Documents
+            .IgnoreQueryFilters()
             .Where(d => d.Status == DocumentStatus.Processing && !d.IsDeleted)
             .ToListAsync(ct);
 

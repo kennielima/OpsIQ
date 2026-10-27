@@ -30,7 +30,7 @@ public class PublicKeyAuthenticationHandler : AuthenticationHandler<Authenticati
             return AuthenticateResult.Fail("Authorization header is missing.");
 
         var hashedKey = HashApiKey(authHeader);
-        var pkKey = await _context.ApiKeys.FirstOrDefaultAsync(k => k.HashedKey == hashedKey);
+        var pkKey = await _context.ApiKeys.IgnoreQueryFilters().FirstOrDefaultAsync(k => k.HashedKey == hashedKey);
         if (pkKey == null)
             return AuthenticateResult.Fail("Invalid API key.");
         if (pkKey.Type != ApiKeyType.PublicKey || pkKey.RevokedAt != null)

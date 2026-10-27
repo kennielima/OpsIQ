@@ -24,7 +24,7 @@ public class PgVectorSearchStore : IVectorSearchStore
         var queryEmbedding = vectors[0];
 
         var query = _context.Chunks
-            .Where(c => c.TenantId == tenantId && c.Embedding != null)
+            .Where(c => c.Embedding != null)
             .Join(_context.Documents, c => c.DocumentId, d => d.Id, (c, d) => new { Chunk = c, Doc = d });
 
         if (publicOnly)
