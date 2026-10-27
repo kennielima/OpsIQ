@@ -142,7 +142,7 @@ public class TenantsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPut("/{tenantId}/origins")]
+    [HttpPut("{tenantId}/origins")]
     [Authorize(AuthenticationSchemes = "ApiKey")]
     public async Task<IActionResult> AddOrigins(Guid tenantId, [FromBody] string[] origins)
     {

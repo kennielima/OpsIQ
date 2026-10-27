@@ -2,6 +2,6 @@ namespace OpsIq.Core.Entities;
 
 public enum ApiKeyType
 {
-    PublicKey,
-    SecretKey
+    SecretKey = 0,
+    PublicKey = 1
 }
