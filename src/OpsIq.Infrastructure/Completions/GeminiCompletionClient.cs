@@ -22,6 +22,9 @@ public class GeminiCompletionClient : ICompletionClient
     {
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={_geminiApiKey}";
 
+        // var client = new GenerativeModel(apiKey: _geminiApiKey, model: "gemini-3.8-flash");
+        // var response = await client.GenerateContentAsync(prompt);
+        // return response.Text;
         var body = new
         {
             contents = new[]
