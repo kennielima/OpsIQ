@@ -1,0 +1,58 @@
+{
+    "answerable": [
+        {
+            "question": "What is the passing score for the SAA-C03 exam?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "How many questions are on the SAA-C03 exam?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What is the weight of Design Secure Architectures domain?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What exam trigger maps to S3 File Gateway?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "How long is the SAA-C03 exam?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What license are the notes shared under?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What is the weight of Design Cost-Optimized Architectures?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What services are covered under Integration and Messaging?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What confusable pairs does the document cover?",
+            "expectedDocument": "readmeee.md"
+        },
+        {
+            "question": "What strategy does the document recommend for exam review?",
+            "expectedDocument": "readmeee.md"
+        }
+    ],
+    "unanswerable": [
+        {
+            "question": "What is the capital of France?"
+        },
+        {
+            "question": "How do I reset my AWS account password?"
+        },
+        {
+            "question": "What is the price of Bitcoin today?"
+        },
+        {
+            "question": "Who wrote the Harry Potter series?"
+        }
+    ]
+}
