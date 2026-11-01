@@ -17,6 +17,10 @@ public class GeminiEmbeddingClient : IEmbeddingClient
 
     public async Task<IReadOnlyList<float[]>> EmbedAsync(IEnumerable<string> texts, CancellationToken ct = default)
     {
+        // var client = new GenerativeModel(apiKey: _geminiApiKey, model: "gemini-embedding-001");
+        // var response = await client.EmbedContentAsync(text);
+        // return response.Embedding.Values.ToArray();
+
         var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents?key={_geminiApiKey}";
         // var results = new List<float[]>();
         var requests = new List<object>();

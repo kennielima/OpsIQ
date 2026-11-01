@@ -42,10 +42,10 @@ builder.Services.AddAuthentication()
     .AddScheme<AuthenticationSchemeOptions, PublicKeyAuthenticationHandler>("PublicKey", null);
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsFactory>();
-builder.Services.AddHttpClient<IEmbeddingClient, GeminiEmbeddingClient>();
+builder.Services.AddHttpClient<IEmbeddingClient, OpenAiEmbeddingClient>();
 builder.Services.AddScoped<IChunker, FixedSizeChunker>();
 builder.Services.AddHostedService<DocumentIngestionWorker>();
-builder.Services.AddHttpClient<ICompletionClient, GeminiCompletionClient>();
+builder.Services.AddHttpClient<ICompletionClient, OpenAiCompletionClient>();
 builder.Services.AddScoped<IVectorSearchStore, PgVectorSearchStore>();
 builder.Services.AddScoped<RagService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
