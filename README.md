@@ -2,7 +2,7 @@
 
 A backend-for-AI platform serving two modes on a single retrieval core: internal ops/compliance staff querying policy documents, and end-customers through an embeddable chat widget. Every answer is **grounded with source citations** — not a chatbot that hallucinates confidently.
 
-Built with ASP.NET Core 10 / .NET 10, PostgreSQL + pgvector, and Gemini (embedding + completion).
+Built with ASP.NET Core 10 / .NET 10, PostgreSQL + pgvector, and OpenAI (embedding + completion).
 
 ## Why
 
@@ -23,7 +23,7 @@ Built:
 - Role-based authorization (SuperAdmin / Admin / User)
 - Widget endpoint with ASP.NET Core rate limiting (per key+IP and per-tenant daily cap), per-tenant CORS origin allowlisting, and server-side origin enforcement
 - Anonymous widget sessions (`SessionId`) persisted without user identity
-- Mini-eval harness: hand-authored Q&A pairs run in staff and public-only modes, reporting retrieval hit rate and refusal accuracy
+- Mini-eval harness: hand-authored Q&A pairs run in staff mode, reporting retrieval hit rate and refusal accuracy
 - Global exception handler with structured upstream error logging
 
 ## Architecture
@@ -41,8 +41,8 @@ src/
 
   OpsIq.Infrastructure/    Data access + external integrations
     Data/                  AppDbContext, IEntityTypeConfiguration<T> per entity, migrations
-    Embeddings/            GeminiEmbeddingClient (HttpClient)
-    Completions/           GeminiCompletionClient
+    Embeddings/            OpenAiEmbeddingClient
+    Completions/           OpenAiCompletionClient
     Retrieval/             PgVectorSearchStore (cosine distance via pgvector)
     Ingestion/             DocumentIngestionWorker (BackgroundService)
     Chunking/              FixedSizeChunker
@@ -54,7 +54,7 @@ src/
     Program.cs             Only place Core abstractions are bound to Infra impls
 
   evals/                   Mini-eval harness (console project, no HTTP)
-    questions.json         Hand-authored Q&A pairs with expected document + visibility tags
+    questions.json         Hand-authored Q&A pairs with expected document
 ```
 
 ## Key design decisions
@@ -63,7 +63,7 @@ src/
 
 **Citations are rows, not strings.** The `Citation` table links `Message → Chunk` with rank and cosine-distance score. Clients get traceable provenance; internal eval can compute precision over them later.
 
-**Score-threshold short-circuit.** Before calling the LLM, `RagService` checks if the top vector-search score exceeds a threshold (0.5). Off-topic questions ("Who is Elon Musk?" against policy docs) never hit the completion API — saving tokens and avoiding hallucinated grounding.
+**Score-threshold short-circuit.** Before calling the LLM, `RagService` checks if the top vector-search score exceeds a threshold. Off-topic questions ("Who is Elon Musk?" against policy docs) never hit the completion API — saving tokens and avoiding hallucinated grounding.
 
 **Three auth schemes, one identity model.** Staff hit `/api/query`, `/api/documents` with cookie auth; privileged ops accept `sk_` API keys; the widget uses `pk_` publishable keys — hashed at rest, revocable, scoped to one tenant. All three schemes resolve to the same `TenantId` claim, so every controller reads tenant identity the same way regardless of how the request arrived.
 
@@ -74,10 +74,10 @@ src/
 ## Tech stack
 
 - **Runtime**: .NET 10 / ASP.NET Core 10
-- **Database**: PostgreSQL + pgvector (`vector(768)` embedding column)
+- **Database**: PostgreSQL + pgvector (`vector(1536)` embedding column)
 - **ORM**: EF Core with Npgsql + Pgvector.EntityFrameworkCore
 - **Auth**: ASP.NET Core Identity (cookie) + custom `AuthenticationHandler` for API keys
-- **AI**: Google Gemini — `gemini-embedding-001` (768-dim) + `gemini-3.8-flash`
+- **AI**: OpenAI — `text-embedding-3-small` (1536-dim) + `gpt-4.1-mini`
 - **API docs**: OpenAPI via `Microsoft.AspNetCore.OpenApi` + Scalar UI
 
 ## Running locally
@@ -109,18 +109,18 @@ A super-admin user is auto-provisioned on first run from the env config.
 
 ## API surface
 
-| Endpoint                  | Method              | Auth                     |
-| ------------------------- | ------------------- | ------------------------ |
-| `/api/auth/login`                        | POST                | Anonymous                |
-| `/api/auth/logout`                       | POST                | Cookie                   |
-| `/api/tenants`                           | POST                | `sk_` (SuperAdmin)       |
-| `/api/tenants/{id}/users`                | POST                | `sk_` or Cookie (Admin)  |
-| `/api/tenants/{id}/keys`                 | POST / GET          | `sk_`                    |
-| `/api/tenants/{id}/keys/{keyId}`         | DELETE              | `sk_`                    |
-| `/api/tenants/{id}/origins`              | PUT                 | `sk_`                    |
-| `/api/documents`                         | GET / POST / DELETE | Cookie                   |
-| `/api/documents/{id}`                    | PATCH               | `sk_`                    |
-| `/api/query/ask`                         | POST                | Cookie                   |
-| `/api/widget/query`                      | POST                | `pk_`                    |
-| `/api/me`                                | GET                 | Cookie                   |
-| `/api/me/resetpassword`                  | GET                 | Cookie                   |
+| Endpoint                         | Method              | Auth                    |
+| -------------------------------- | ------------------- | ----------------------- |
+| `/api/auth/login`                | POST                | Anonymous               |
+| `/api/auth/logout`               | POST                | Cookie                  |
+| `/api/tenants`                   | POST                | `sk_` (SuperAdmin)      |
+| `/api/tenants/{id}/users`        | POST                | `sk_` or Cookie (Admin) |
+| `/api/tenants/{id}/keys`         | POST / GET          | `sk_`                   |
+| `/api/tenants/{id}/keys/{keyId}` | DELETE              | `sk_`                   |
+| `/api/tenants/{id}/origins`      | PUT                 | `sk_`                   |
+| `/api/documents`                 | GET / POST / DELETE | Cookie                  |
+| `/api/documents/{id}`            | PATCH               | `sk_`                   |
+| `/api/query/ask`                 | POST                | Cookie                  |
+| `/api/widget/query`              | POST                | `pk_`                   |
+| `/api/me`                        | GET                 | Cookie                  |
+| `/api/me/resetpassword`          | GET                 | Cookie                  |
