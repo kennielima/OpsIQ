@@ -23,12 +23,6 @@ public class QueryController : ControllerBase
         _userManager = userManager;
     }
 
-    [HttpGet("protected")]
-    [Authorize(AuthenticationSchemes = "ApiKey")]
-    public IActionResult Protected()
-    {
-        return Ok("You have a valid API key.");
-    }
     [HttpPost]
     [Route("ask")]
     [Authorize]
