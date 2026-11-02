@@ -21,8 +21,7 @@ public class OpenAiEmbeddingClient : IEmbeddingClient
         try
         {
             var client = new EmbeddingClient("text-embedding-3-small", _openAiApiKey);
-            var options = new EmbeddingGenerationOptions { Dimensions = 768 };
-            var response = await client.GenerateEmbeddingsAsync(texts.ToList(), options, ct);
+            var response = await client.GenerateEmbeddingsAsync(texts.ToList());
             return response.Value.Select(e => e.ToFloats().ToArray()).ToList();
         }
         catch (ClientResultException ex)
