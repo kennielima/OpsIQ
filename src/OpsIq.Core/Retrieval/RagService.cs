@@ -20,7 +20,7 @@ public class RagService
     {
         var chunks = await _vectorSearch.VectorSearch(question, tenantId, publicOnly);
         _logger.LogInformation("Top score: {Score}", chunks[0].Score);
-        if (chunks.Length == 0 || chunks[0].Score > 0.5f)
+        if (chunks.Length == 0 || chunks[0].Score > 0.75f)
             return ("I don't have information on that in the documents.", []);
 
         var chunkText = string.Join("\n---\n", chunks.Select(c => c.Chunk.Content));

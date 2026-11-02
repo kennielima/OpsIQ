@@ -79,6 +79,10 @@ public class DocumentIngestionWorker : BackgroundService
                 }
 
                 var vectors = await embeddings.EmbedAsync(chunks, ct);
+                var oldChunks = await db.Chunks.IgnoreQueryFilters()
+                    .Where(c => c.DocumentId == doc.Id)
+                    .ToListAsync(ct);
+                db.Chunks.RemoveRange(oldChunks);
 
                 for (int i = 0; i < chunks.Count; i++)
                 {

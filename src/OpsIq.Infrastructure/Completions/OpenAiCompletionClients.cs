@@ -26,10 +26,10 @@ public class OpenAiCompletionClient : ICompletionClient
         var url = "https://api.openai.com/v1/chat/completions";
         var body = new
         {
-            model = "gpt-6-astra",
+            model = "gpt-4.1-mini",
             messages = new[]
         {
-            new { role = "user", content = new { text = prompt } }
+            new { role = "user", content = prompt }
         }
         };
 
