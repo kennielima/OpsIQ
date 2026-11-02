@@ -19,7 +19,7 @@ public class DocumentsController : ControllerBase
         _userManager = userManager;
     }
     [HttpPost]
-    [Authorize(AuthenticationSchemes = "ApiKey")]
+    [Authorize(Roles = "TenantAdmin")]
     public async Task<ActionResult<Document>> Upload(IFormFile file, [FromForm] DocumentVisibility visibility)
     {
         var tenantId = User.FindFirst("TenantId")?.Value;
@@ -53,7 +53,7 @@ public class DocumentsController : ControllerBase
     }
 
     [HttpPatch("{id}")]
-    [Authorize(AuthenticationSchemes = "ApiKey")]
+    [Authorize(Roles = "TenantAdmin")]
     public async Task<ActionResult> UpdateDocument(Guid id, [FromForm] DocumentVisibility visibility)
     {
         var tenantId = User.FindFirst("TenantId")?.Value;

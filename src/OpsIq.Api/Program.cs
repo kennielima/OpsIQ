@@ -38,7 +38,6 @@ builder.Services.AddIdentity<AppUser, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddAuthentication()
-    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", null)
     .AddScheme<AuthenticationSchemeOptions, PublicKeyAuthenticationHandler>("PublicKey", null);
 
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, AppUserClaimsFactory>();

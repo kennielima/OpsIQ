@@ -19,7 +19,7 @@ Built:
 - Document visibility controls (`Internal` / `Public`) — widget retrieves public documents only
 - pgvector similarity search with score-threshold filtering (off-topic questions short-circuit before the LLM)
 - Grounded generation with first-class `Citation` rows linking `Message → Chunk` by rank + score
-- Three auth paths: ASP.NET Core Identity for staff, hashed `sk_` keys for admin ops, publishable `pk_` keys for the widget
+- Two auth paths: ASP.NET Core Identity (cookie + roles) for all human users, publishable `pk_` keys for the widget — `sk_` keys are minted by admins for programmatic/integration access
 - Role-based authorization (SuperAdmin / Admin / User)
 - Widget endpoint with ASP.NET Core rate limiting (per key+IP and per-tenant daily cap), per-tenant CORS origin allowlisting, and server-side origin enforcement
 - Anonymous widget sessions (`SessionId`) persisted without user identity
@@ -65,7 +65,7 @@ src/
 
 **Score-threshold short-circuit.** Before calling the LLM, `RagService` checks if the top vector-search score exceeds a threshold. Off-topic questions ("Who is Elon Musk?" against policy docs) never hit the completion API — saving tokens and avoiding hallucinated grounding.
 
-**Three auth schemes, one identity model.** Staff hit `/api/query`, `/api/documents` with cookie auth; privileged ops accept `sk_` API keys; the widget uses `pk_` publishable keys — hashed at rest, revocable, scoped to one tenant. All three schemes resolve to the same `TenantId` claim, so every controller reads tenant identity the same way regardless of how the request arrived.
+**Two auth schemes, one identity model.** All human users — staff and admins — authenticate with cookie auth and are authorized by role (`SuperAdmin`, `TenantAdmin`, `User`). The widget uses `pk_` publishable keys — hashed at rest, revocable, scoped to one tenant. `sk_` keys exist as a minted artifact for programmatic/integration access, not as an auth scheme for admin operations. Both schemes resolve to the same `TenantId` claim.
 
 **Widget is a pure edge adapter.** `RagService.AnswerQuestionAsync` has no knowledge of widgets, keys, or origins. The one permitted core change is a `publicOnly` flag on vector search — everything else (rate limiting, CORS, origin enforcement, session persistence, response projection) lives at the edge in `WidgetController`. This is the concrete proof that identity resolution was decoupled from retrieval in v1.
 
@@ -113,13 +113,15 @@ A super-admin user is auto-provisioned on first run from the env config.
 | -------------------------------- | ------------------- | ----------------------- |
 | `/api/auth/login`                | POST                | Anonymous               |
 | `/api/auth/logout`               | POST                | Cookie                  |
-| `/api/tenants`                   | POST                | `sk_` (SuperAdmin)      |
-| `/api/tenants/{id}/users`        | POST                | `sk_` or Cookie (Admin) |
-| `/api/tenants/{id}/keys`         | POST / GET          | `sk_`                   |
-| `/api/tenants/{id}/keys/{keyId}` | DELETE              | `sk_`                   |
-| `/api/tenants/{id}/origins`      | PUT                 | `sk_`                   |
-| `/api/documents`                 | GET / POST / DELETE | Cookie                  |
-| `/api/documents/{id}`            | PATCH               | `sk_`                   |
+| `/api/tenants`                      | POST                | Cookie (SuperAdmin)    |
+| `/api/tenants/{id}/users`           | POST                | Cookie (TenantAdmin)   |
+| `/api/tenants/{id}/keys`            | POST                | Cookie (TenantAdmin)   |
+| `/api/tenants/{id}/keys/{keyId}`    | DELETE              | Cookie (TenantAdmin)   |
+| `/api/tenants/{id}/keys/sk`         | POST                | Cookie (TenantAdmin)   |
+| `/api/tenants/{id}/keys/sk/{keyId}` | DELETE              | Cookie (TenantAdmin)   |
+| `/api/tenants/{id}/origins`         | PUT                 | Cookie (TenantAdmin)   |
+| `/api/documents`                    | GET / POST / DELETE | Cookie                 |
+| `/api/documents/{id}`               | PATCH               | Cookie (TenantAdmin)   |
 | `/api/query/ask`                 | POST                | Cookie                  |
 | `/api/widget/query`              | POST                | `pk_`                   |
 | `/api/me`                        | GET                 | Cookie                  |
