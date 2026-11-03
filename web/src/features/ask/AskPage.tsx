@@ -2,9 +2,10 @@ import { useState, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { documentsApi } from '../../api/documents'
 import { queryKeys } from '../../lib/queryKeys'
+import { Link } from '@tanstack/react-router'
 import {
   Send, CheckCircle, Copy, ThumbsUp, ThumbsDown,
-  AlertTriangle, Check, Clock,
+  AlertTriangle, RotateCcw, FileSearch, Upload, Clock, FileText,
 } from 'lucide-react'
 import { queryApi } from '../../api/query'
 import { HttpError } from '../../api/client'
@@ -23,7 +24,7 @@ export function AskPage() {
     mutationFn: queryApi.ask,
     onSuccess: data => {
       setResult(data)
-      setState(data.answer ? 'answer' : 'noanswer')
+      setState(data.citations.length > 0 ? 'answer' : 'noanswer')
       setActiveCite(null)
     },
     onError: err => {
@@ -67,12 +68,14 @@ export function AskPage() {
             onChange={e => setQuestion(e.target.value)}
           />
         </div>
-        <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
-          <span className="inline-flex items-center gap-2 text-ink-2 text-[12.5px]">
-            <span>Searching all workspace documents</span>
-            <span className="w-1 h-1 rounded-full bg-[#C2C9D4]" />
-            <span className="tabular-nums"><b>{question.length}</b> of {MAX_CHARS} characters</span>
-          </span>
+        <div className="flex items-center justify-between mt-3">
+          {state === 'idle'
+            ? <span className="text-ink-2 text-[12.5px]">Searching all workspace documents</span>
+            : <span />
+          }
+          <span className="text-ink-2 text-[12.5px] tabular-nums"><b>{question.length}</b> of {MAX_CHARS} characters</span>
+        </div>
+        <div className="flex justify-end mt-3">
           <button type="submit" disabled={state === 'loading' || !question.trim()} className="btn btn-primary btn-sm">
             <Send size={17} strokeWidth={1.75} />
             Ask question
@@ -133,32 +136,40 @@ export function AskPage() {
       {/* No answer */}
       {state === 'noanswer' && (
         <div className="mt-5">
-          <div className="card flex gap-4 items-start p-[26px]">
-            <div className="w-10 h-10 rounded-[10px] bg-warn-bg text-warn-ink grid place-items-center flex-none">
-              <AlertTriangle size={22} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-[17px] font-bold">I couldn't find this in your documents</h3>
-              <p className="text-body text-ink-2 mt-[6px] max-w-[62ch] leading-relaxed">
-                Nothing in AcmePay's documents was close enough to cite, so no answer was generated, OpsIQ won't guess. Answers here are always drawn from your own files.
-              </p>
-              <ul className="list-none p-0 m-0 mt-4 flex flex-col gap-[9px]">
-                {[
-                  'Rephrase using the wording your documents use.',
-                  'Check the document finished processing on the Documents page.',
-                  "If it isn't there yet, ask an admin to upload it.",
-                ].map((s, i) => (
-                  <li key={i} className="flex gap-[10px] text-[13.5px] items-start">
-                    <Check size={16} strokeWidth={1.75} className="text-accent mt-[2px] flex-none" />
-                    {s}
-                  </li>
-                ))}
-              </ul>
-              <div className="flex gap-[10px] mt-5 flex-wrap">
-                <button className="btn btn-primary btn-sm" onClick={() => document.getElementById('q')?.focus()}>
-                  Rephrase question
-                </button>
+          <div className="card p-[26px]">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-[10px] bg-warn-bg text-warn-ink grid place-items-center flex-none shrink-0">
+                <AlertTriangle size={22} strokeWidth={2} />
               </div>
+              <div>
+                <h3 className="text-[17px] font-bold text-ink">I couldn't find this in your documents</h3>
+                <p className="text-body text-ink-2 mt-[6px] leading-relaxed">
+                  Nothing in your documents was close enough to cite, so OpsIQ won't guess. A confident but unsourced answer is exactly what this tool is built to avoid.
+                </p>
+              </div>
+            </div>
+
+            <ul className="list-none p-0 m-0 mt-5 flex flex-col gap-[10px]">
+              {[
+                { icon: <RotateCcw size={15} strokeWidth={1.75} />, text: 'Rephrase using the wording your documents use — for example "representment window" instead of "dispute deadline".' },
+                { icon: <FileSearch size={15} strokeWidth={1.75} />, text: 'Check the relevant document has finished processing on the Documents page.' },
+                { icon: <Upload size={15} strokeWidth={1.75} />, text: "If it isn't there yet, ask an admin to upload it." },
+              ].map(({ icon, text }, i) => (
+                <li key={i} className="flex gap-3 text-[13.5px] text-ink items-start">
+                  <span className="text-ink-2 mt-[2px] flex-none">{icon}</span>
+                  {text}
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex gap-[10px] mt-6 flex-wrap">
+              <Link to="/documents" className="btn btn-primary btn-sm no-underline">
+                <FileText size={16} strokeWidth={1.75} />
+                View documents
+              </Link>
+              <button className="btn btn-secondary btn-sm" onClick={() => document.getElementById('q')?.focus()}>
+                Rephrase question
+              </button>
             </div>
           </div>
         </div>
