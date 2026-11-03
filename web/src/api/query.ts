@@ -8,5 +8,5 @@ export interface QueryRequest {
 
 export const queryApi = {
   ask: (body: QueryRequest) =>
-    apiClient.post<QueryResponse>('/query', body),
+    apiClient.post<QueryResponse>('/query/ask', body),
 }

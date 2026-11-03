@@ -6,7 +6,7 @@ import { queryKeys } from '../lib/queryKeys'
 export const Route = createFileRoute('/_auth/settings')({
   beforeLoad: async () => {
     const user = queryClient.getQueryData<{ role: string }>(queryKeys.me())
-    if (user?.role !== 'Admin') {
+    if (user?.role !== 'Admin' && user?.role !== 'TenantAdmin') {
       throw redirect({ to: '/not-allowed' })
     }
   },

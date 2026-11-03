@@ -3,23 +3,86 @@
 @tailwind utilities;
 
 @layer base {
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-
-  html, body {
-    margin: 0;
-    padding: 0;
-  }
-
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
   body {
-    @apply bg-background text-on-surface font-sans antialiased;
-    overscroll-behavior: none;
+    @apply bg-bg text-ink font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, p { margin: 0; }
+  a { @apply text-accent no-underline; }
+  a:hover { @apply underline; }
+  button { font-family: inherit; cursor: pointer; }
+  :focus-visible {
+    outline: 2px solid #2147D6;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 h-control px-4 rounded-sm
+           text-body font-semibold border border-transparent bg-transparent text-ink
+           whitespace-nowrap transition-all duration-100 cursor-pointer;
+  }
+  .btn svg { @apply w-[17px] h-[17px]; }
+  .btn-sm { @apply h-control-sm px-3 text-[13px]; }
+  .btn-primary { @apply bg-accent text-white border-accent; }
+  .btn-primary:hover { @apply bg-accent-h border-accent-h; }
+  .btn-secondary { @apply bg-card border-line text-ink; }
+  .btn-secondary:hover { @apply bg-[#FAFBFC] border-[#D4D9E0]; }
+  .btn-ghost { @apply text-ink-2; }
+  .btn-ghost:hover { @apply bg-[#EEF0F3] text-ink; }
+  .btn-danger { @apply bg-fail-ink text-white border-fail-ink; }
+  .btn-danger:hover { @apply bg-[#8A1616]; }
+  .btn:disabled { @apply opacity-55 cursor-not-allowed; }
+
+  /* Card */
+  .card {
+    @apply bg-card border border-line rounded shadow-card;
   }
 
-  /* Material Symbols variable font settings */
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
-    user-select: none;
+  /* Field / Input */
+  .field { @apply flex flex-col gap-[7px]; }
+  .field label { @apply text-label text-ink-2; }
+  .inp {
+    @apply h-control px-[13px] border border-line rounded-sm bg-card
+           font-sans text-body text-ink w-full placeholder:text-[#9AA3B2]
+           focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent;
   }
+  textarea.inp {
+    @apply min-h-[120px] py-[13px] resize-y leading-relaxed h-auto;
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center gap-[6px] h-[26px] px-[10px] rounded-full
+           text-label font-semibold;
+  }
+  .badge svg { @apply w-[13px] h-[13px]; }
+  .badge-ready     { @apply bg-ok-bg   text-ok-ink; }
+  .badge-processing{ @apply bg-warn-bg text-warn-ink; }
+  .badge-failed    { @apply bg-fail-bg text-fail-ink; }
+
+  /* Chips */
+  .chip {
+    @apply inline-flex items-center gap-[6px] h-6 px-[10px] rounded-full text-label font-semibold;
+  }
+  .chip-internal { @apply bg-[#EEF0F3] text-ink-2; }
+  .chip-public   { @apply bg-tint text-accent border border-tint-line; }
+  .chip-admin    { @apply bg-tint text-accent border border-tint-line; }
+
+  /* Icon button */
+  .icon-btn {
+    @apply w-control-sm h-control-sm rounded-xs border border-transparent
+           bg-transparent text-ink-2 inline-flex items-center justify-center
+           transition-colors;
+  }
+  .icon-btn:hover { @apply bg-[#EEF0F3] text-ink; }
+  .icon-btn.danger:hover { @apply bg-fail-bg text-fail-ink; }
 }

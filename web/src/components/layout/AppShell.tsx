@@ -1,15 +1,13 @@
 import { type ReactNode } from 'react'
 import { Sidebar } from './Sidebar'
 
-interface Props {
-  children: ReactNode
-}
-
-export function AppShell({ children }: Props) {
+export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="grid min-h-screen" style={{ gridTemplateColumns: '240px 1fr' }}>
       <Sidebar />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="min-w-0 flex flex-col">
+        {children}
+      </main>
     </div>
   )
 }

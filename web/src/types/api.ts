@@ -4,38 +4,46 @@ export type DocumentStatus = 'Processing' | 'Ready' | 'Failed'
 export type DocumentVisibility = 'Internal' | 'Public'
 
 export interface MeResponse {
-  id: string
+  userId: string
   email: string
-  name: string
-  role: Role
+  role: string        // raw value from backend: "TenantAdmin" | "TenantUser" | "SuperAdmin"
   tenantId: string
-  tenantName: string
+  // name and tenantName not returned by backend — derive from email
+  name?: string
+  tenantName?: string
 }
 
+// Matches the backend Document entity (camelCase serialization)
 export interface Document {
   id: string
-  name: string
+  fileName: string    // backend field (not "name")
   status: DocumentStatus
-  failureReason?: string
   visibility: DocumentVisibility
   uploadedAt: string
-  fileSizeBytes?: number
-  chunkCount?: number
+  contentType?: string
+  isDeleted?: boolean
 }
 
+// Matches the backend citation shape from QueryController
 export interface Citation {
   rank: number
-  documentTitle: string
-  snippet: string
-  visibility: DocumentVisibility
-  uploadedAt: string
+  chunkId: string
+  documentId: string
+  content: string     // chunk text (used as snippet)
+  score: number
+  // enriched fields (if backend adds them later)
+  documentTitle?: string
+  snippet?: string
+  visibility?: DocumentVisibility
+  uploadedAt?: string
 }
 
+// Matches the backend QueryController response
 export interface QueryResponse {
   answer: string | null
-  answerFound: boolean
   citations: Citation[]
-  conversationId: string
+  // answerFound not returned — derive from answer !== null
+  conversationId?: string
 }
 
 export interface Conversation {
@@ -72,7 +80,7 @@ export interface AllowedOrigin {
 
 export interface TeamMember {
   id: string
-  name: string
+  name?: string
   email: string
   role: Role
 }

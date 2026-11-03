@@ -1,3 +1,278 @@
+import { useState, useRef } from 'react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { documentsApi } from '../../api/documents'
+import { queryKeys } from '../../lib/queryKeys'
+import {
+  Send, CheckCircle, Copy, ThumbsUp, ThumbsDown,
+  AlertTriangle, Check, Clock,
+} from 'lucide-react'
+import { queryApi } from '../../api/query'
+import { HttpError } from '../../api/client'
+import type { QueryResponse, Citation } from '../../types/api'
+
+const MAX_CHARS = 500
+
 export function AskPage() {
-  return <div className="p-8"><h1 className="text-page-title font-bold text-ink">Ask</h1></div>
+  const [question, setQuestion] = useState('')
+  const [result, setResult] = useState<QueryResponse | null>(null)
+  const [state, setState] = useState<'idle' | 'loading' | 'answer' | 'noanswer' | 'ratelimit'>('idle')
+  const [activeCite, setActiveCite] = useState<number | null>(null)
+  const srcRefs = useRef<Record<number, HTMLDivElement | null>>({})
+
+  const { mutate: ask } = useMutation({
+    mutationFn: queryApi.ask,
+    onSuccess: data => {
+      setResult(data)
+      setState(data.answer ? 'answer' : 'noanswer')
+      setActiveCite(null)
+    },
+    onError: err => {
+      setState(err instanceof HttpError && err.status === 429 ? 'ratelimit' : 'idle')
+    },
+  })
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!question.trim()) return
+    setState('loading')
+    setResult(null)
+    ask({ question, conversationId: result?.conversationId })
+  }
+
+  function handleCite(rank: number) {
+    setActiveCite(rank)
+    srcRefs.current[rank]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    setTimeout(() => setActiveCite(null), 1800)
+  }
+
+  return (
+    <section className="px-10 py-8 pb-24 max-w-screen w-full">
+      <div className="mb-6">
+        <h1 className="text-page-title">Ask</h1>
+        <p className="text-body text-ink-2 mt-1">
+          Ask a question and get an answer drawn only from your workspace's documents, with sources attached.
+        </p>
+      </div>
+
+      {/* Input card */}
+      <form onSubmit={handleSubmit} className="card p-[18px]">
+        <div className="field">
+          <label htmlFor="q" className="sr-only">Your question</label>
+          <textarea
+            id="q"
+            className="inp"
+            placeholder="Ask anything about your policies, runbooks, or procedures…"
+            value={question}
+            maxLength={MAX_CHARS}
+            onChange={e => setQuestion(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
+          <span className="inline-flex items-center gap-2 text-ink-2 text-[12.5px]">
+            <span>Searching all workspace documents</span>
+            <span className="w-1 h-1 rounded-full bg-[#C2C9D4]" />
+            <span className="tabular-nums"><b>{question.length}</b> of {MAX_CHARS} characters</span>
+          </span>
+          <button type="submit" disabled={state === 'loading' || !question.trim()} className="btn btn-primary btn-sm">
+            <Send size={17} strokeWidth={1.75} />
+            Ask question
+          </button>
+        </div>
+      </form>
+
+      {/* Rate limit */}
+      {state === 'ratelimit' && (
+        <div className="card mt-5 px-5 py-[18px] flex items-center gap-[13px] border-l-[3px] border-l-warn-ink">
+          <Clock size={20} strokeWidth={2} className="text-warn-ink flex-none" />
+          <div>
+            <b className="font-semibold">Too many requests. Try again in a minute.</b>
+            <p className="text-ink-2 mt-[2px] text-body">Your documents and history are unaffected.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Loading */}
+      {state === 'loading' && (
+        <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: '1fr 340px' }}>
+          <div className="card p-[22px]">
+            <span className="inline-flex items-center gap-2 text-ink-2 text-[12.5px]">
+              <Clock size={17} className="text-accent" strokeWidth={1.75} />
+              Searching documents and writing a grounded answer…
+            </span>
+            <div className="flex flex-col gap-3 mt-[18px]">
+              {[94, 99, 86, 72, 90, 64].map((w, i) => (
+                <div key={i} className="h-[14px] rounded-xs bg-[#EDEFF2] animate-pulse" style={{ width: `${w}%` }} />
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="text-label text-ink-2 uppercase tracking-[0.06em] mb-[10px]">Sources</div>
+            <div className="flex flex-col gap-3">
+              {[0, 1].map(i => (
+                <div key={i} className="card flex gap-3 p-[14px]">
+                  <div className="w-[22px] h-[22px] rounded-xs bg-[#EEF0F3] flex-none animate-pulse" />
+                  <div className="flex-1 flex flex-col gap-2">
+                    <div className="h-[13px] rounded-xs bg-[#EDEFF2] animate-pulse" style={{ width: '70%' }} />
+                    <div className="h-[11px] rounded-xs bg-[#EDEFF2] animate-pulse" style={{ width: '90%' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Answer */}
+      {state === 'answer' && result && (
+        <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: '1fr 340px', alignItems: 'start' }}>
+          <AnswerCard result={result} onCite={handleCite} />
+          <SourcesPanel citations={result.citations} activeCite={activeCite} srcRefs={srcRefs} />
+        </div>
+      )}
+
+      {/* No answer */}
+      {state === 'noanswer' && (
+        <div className="mt-5">
+          <div className="card flex gap-4 items-start p-[26px]">
+            <div className="w-10 h-10 rounded-[10px] bg-warn-bg text-warn-ink grid place-items-center flex-none">
+              <AlertTriangle size={22} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-[17px] font-bold">I couldn't find this in your documents</h3>
+              <p className="text-body text-ink-2 mt-[6px] max-w-[62ch] leading-relaxed">
+                Nothing in AcmePay's documents was close enough to cite, so no answer was generated, OpsIQ won't guess. Answers here are always drawn from your own files.
+              </p>
+              <ul className="list-none p-0 m-0 mt-4 flex flex-col gap-[9px]">
+                {[
+                  'Rephrase using the wording your documents use.',
+                  'Check the document finished processing on the Documents page.',
+                  "If it isn't there yet, ask an admin to upload it.",
+                ].map((s, i) => (
+                  <li key={i} className="flex gap-[10px] text-[13.5px] items-start">
+                    <Check size={16} strokeWidth={1.75} className="text-accent mt-[2px] flex-none" />
+                    {s}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex gap-[10px] mt-5 flex-wrap">
+                <button className="btn btn-primary btn-sm" onClick={() => document.getElementById('q')?.focus()}>
+                  Rephrase question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function AnswerCard({ result, onCite }: { result: QueryResponse; onCite: (rank: number) => void }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    if (result.answer) void navigator.clipboard.writeText(result.answer)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
+  const parts = result.answer?.split(/(\[\d+\])/g) ?? []
+
+  return (
+    <div className="card p-[22px]">
+      <span className="inline-flex items-center gap-[7px] text-[12px] font-semibold text-ok-ink bg-ok-bg px-[10px] py-[5px] rounded-full">
+        <CheckCircle size={13} strokeWidth={2} />
+        Answer grounded in {result.citations.length} source{result.citations.length !== 1 ? 's' : ''}
+      </span>
+
+      <div className="mt-4 max-w-[64ch]">
+        {parts.map((part, i) => {
+          const m = part.match(/^\[(\d+)\]$/)
+          if (m) {
+            const rank = parseInt(m[1], 10)
+            return (
+              <button
+                key={i}
+                onClick={() => onCite(rank)}
+                className="text-accent font-semibold text-[11px] align-super leading-none px-px rounded-xs hover:bg-tint transition-colors cursor-pointer border-none bg-transparent"
+              >
+                [{rank}]
+              </button>
+            )
+          }
+          return <span key={i} className="text-answer leading-[1.65]">{part}</span>
+        })}
+      </div>
+
+      <div className="flex items-center gap-[6px] mt-[18px] pt-4 border-t border-line-soft">
+        <button onClick={handleCopy} className="btn btn-ghost btn-sm">
+          <Copy size={15} strokeWidth={1.75} />
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+        <div className="flex-1" />
+        <button className="btn btn-ghost btn-sm"><ThumbsUp size={15} strokeWidth={1.75} />Helpful</button>
+        <button className="btn btn-ghost btn-sm"><ThumbsDown size={15} strokeWidth={1.75} />Not helpful</button>
+      </div>
+    </div>
+  )
+}
+
+function SourcesPanel({ citations, activeCite, srcRefs }: {
+  citations: Citation[]
+  activeCite: number | null
+  srcRefs: React.MutableRefObject<Record<number, HTMLDivElement | null>>
+}) {
+  const { data: docs = [] } = useQuery({
+    queryKey: queryKeys.documents.list(),
+    queryFn: documentsApi.list,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  function docName(documentId: string) {
+    return docs.find(d => d.id === documentId)?.fileName ?? 'Unknown document'
+  }
+
+  function snippet(content: string) {
+    const trimmed = content.trim()
+    return trimmed.length > 180 ? trimmed.slice(0, 180).trimEnd() + '…' : trimmed
+  }
+
+  return (
+    <div>
+      <div className="text-label text-ink-2 uppercase tracking-[0.06em] mb-[10px]">Sources</div>
+      <div className="flex flex-col gap-3">
+        {citations.map(c => (
+          <div
+            key={c.rank}
+            ref={el => { srcRefs.current[c.rank] = el }}
+            className={`card p-5 transition-all duration-150 ${activeCite === c.rank ? 'border-accent shadow-[0_0_0_3px_#EAF0FF]' : ''}`}
+          >
+            <div className="flex items-start gap-3">
+              {/* Number badge */}
+              <div className="w-8 h-8 rounded-full bg-tint text-accent font-semibold text-[13px] grid place-items-center flex-none">
+                {c.rank + 1}
+              </div>
+              <div className="min-w-0">
+                <p className="font-semibold text-[13.5px] text-ink leading-snug">
+                  {c.documentTitle ?? docName(c.documentId)}
+                </p>
+                <p className="text-[13px] leading-relaxed text-ink-2 mt-[7px] overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' }}>
+                  "{c.snippet ?? snippet(c.content)}"
+                </p>
+                <p className="text-[12px] text-ink-2 mt-[9px]">
+                  {c.visibility ?? (docs.find(d => d.id === c.documentId)?.visibility ?? 'Internal')} · Uploaded {
+                    c.uploadedAt
+                      ? new Date(c.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : docs.find(d => d.id === c.documentId)
+                        ? new Date(docs.find(d => d.id === c.documentId)!.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : '—'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }

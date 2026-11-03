@@ -23,4 +23,12 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', '@tanstack/react-router', '@tanstack/react-query'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5088',
+        changeOrigin: true,
+      },
+    },
+  },
 })
