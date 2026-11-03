@@ -6,7 +6,20 @@
   *, *::before, *::after {
     box-sizing: border-box;
   }
-  body {
+
+  html, body {
     margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-background text-on-surface font-sans antialiased;
+    overscroll-behavior: none;
+  }
+
+  /* Material Symbols variable font settings */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    user-select: none;
   }
 }
