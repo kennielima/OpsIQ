@@ -36,9 +36,13 @@ export function Sidebar() {
     >
       {/* Brand */}
       <div className="flex items-center gap-[10px] px-2 pb-[14px]">
-        <div className="w-[30px] h-[30px] rounded-sm bg-accent text-white grid place-items-center font-bold text-base flex-none">
+        {/* <div className="w-[30px] h-[30px] rounded-sm bg-accent text-white grid place-items-center font-bold text-base flex-none">
           O
-        </div>
+        </div> */}
+        <img
+          src="/favicon.svg"
+          alt="OpsIQ Logo"
+          className="w-[30px] h-[30px] rounded-lg shadow-sm" />
         <span className="font-bold text-base text-white tracking-[-0.01em]">OpsIQ</span>
       </div>
 

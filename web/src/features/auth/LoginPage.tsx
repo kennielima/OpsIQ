@@ -38,9 +38,13 @@ export function LoginPage() {
       <div className="bg-navy text-ink-nav flex flex-col" style={{ padding: '56px 60px' }}>
         {/* Logo */}
         <div className="flex items-center gap-[10px] pb-[48px]">
-          <div className="w-[30px] h-[30px] rounded-sm bg-accent text-white grid place-items-center font-bold text-base flex-none">
+          {/* <div className="w-[30px] h-[30px] rounded-sm bg-accent text-white grid place-items-center font-bold text-base flex-none">
             O
-          </div>
+          </div> */}
+          <img
+            src="/favicon.svg"
+            alt="OpsIQ Logo"
+            className="w-[30px] h-[30px] rounded-lg shadow-sm" />
           <span className="font-bold text-base text-white tracking-[-0.01em]">OpsIQ</span>
         </div>
 
