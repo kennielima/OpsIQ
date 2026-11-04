@@ -120,7 +120,7 @@ function HistoryDetail({ detail, onAskAgain }: { detail: ConversationDetail; onA
               <div className="text-[11px] font-semibold text-ink-2 uppercase tracking-[0.08em] mt-7 mb-3">Sources</div>
               <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
                 {detail.citations.map(c => (
-                  <div key={c.rank} className="card p-5 flex flex-col gap-3">
+                  <div key={c.rank} className="rounded-sm border border-line bg-card p-5 flex flex-col gap-3 shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-tint text-accent font-semibold text-[13px] grid place-items-center flex-none">
                         {c.rank + 1}
