@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Upload, ArrowUp, Search, ChevronDown, Check, RotateCcw, Trash2, FileText, Inbox } from 'lucide-react'
+import { Upload, Search, ChevronDown, Check, RotateCcw, Trash2, FileText } from 'lucide-react'
 import { documentsApi } from '../../api/documents'
 import { queryKeys } from '../../lib/queryKeys'
 import type { Document, DocumentVisibility } from '../../types/api'
@@ -78,20 +78,20 @@ export function DocumentsPage() {
         </button>
       </div>
 
-      {/* Drop zone */}
+      {/* Drop zone — always tall/centered */}
       <div
         onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         onClick={() => fileRef.current?.click()}
-        className={`border-[1.5px] border-dashed rounded mb-5 p-[26px] flex items-center gap-4 cursor-pointer transition-colors ${isDragging ? 'border-accent bg-tint/30' : 'border-[#C4CCD8] bg-[#FBFCFD] hover:border-accent'}`}
+        className={`border-[1.5px] border-dashed rounded mb-5 py-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-colors ${isDragging ? 'border-accent bg-tint/30' : 'border-[#C4CCD8] bg-white hover:border-accent'}`}
       >
-        <div className="w-[46px] h-[46px] rounded-[10px] bg-tint text-accent grid place-items-center flex-none">
-          <ArrowUp size={23} strokeWidth={1.75} />
+        <div className="w-14 h-14 rounded-[14px] bg-tint text-accent grid place-items-center">
+          <Upload size={26} strokeWidth={1.75} />
         </div>
-        <div className="flex-1">
+        <div className="text-center">
           <h3 className="text-[15px] font-semibold">{uploading ? 'Uploading…' : 'Drag and drop files here'}</h3>
-          <p className="text-[13px] text-ink-2 mt-[3px]">PDF, Markdown (.md) or text (.txt), up to 10 MB each.</p>
+          <p className="text-[13px] text-ink-2 mt-[3px]">PDF, Markdown or text · up to 10 MB each</p>
         </div>
         <button type="button" className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); fileRef.current?.click() }}>Browse files</button>
       </div>
@@ -105,14 +105,22 @@ export function DocumentsPage() {
         </div>
       )}
 
+      {/* Empty message */}
+      {docs.length === 0 && !isLoading && (
+        <div className="text-center py-6">
+          <h2 className="text-[22px] font-bold text-ink">No documents yet</h2>
+          <p className="text-body text-ink-2 mt-1">Upload your first policy, runbook or FAQ and OpsIQ will index it.</p>
+        </div>
+      )}
+
       {/* Toolbar */}
-      <div className="flex gap-[10px] mb-4 flex-wrap">
+      {docs.length > 0 && <div className="flex gap-[10px] mb-4 flex-wrap">
         <div className="relative flex-1 min-w-[220px] max-w-[360px]">
           <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9AA3B2]" strokeWidth={1.75} />
-          <input className="inp pl-[38px]" placeholder="Search by name" value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="inp pl-[38px] shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)] border-line" placeholder="Search by name" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div className="relative">
-          <select className="h-control px-[14px] pr-9 border border-line rounded-sm bg-card font-sans text-body font-medium text-ink cursor-pointer appearance-none" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+          <select className="h-control px-[14px] pr-9 border border-line rounded-sm bg-card font-sans text-body font-medium text-ink cursor-pointer appearance-none shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
             <option value="">All statuses</option>
             <option value="Ready">Ready</option>
             <option value="Processing">Processing</option>
@@ -121,21 +129,19 @@ export function DocumentsPage() {
           <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 pointer-events-none" strokeWidth={1.75} />
         </div>
         <div className="relative">
-          <select className="h-control px-[14px] pr-9 border border-line rounded-sm bg-card font-sans text-body font-medium text-ink cursor-pointer appearance-none" value={visFilter} onChange={e => setVisFilter(e.target.value)}>
+          <select className="h-control px-[14px] pr-9 border border-line rounded-sm bg-card font-sans text-body font-medium text-ink cursor-pointer appearance-none shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]" value={visFilter} onChange={e => setVisFilter(e.target.value)}>
             <option value="">All visibility</option>
             <option value="Internal">Internal</option>
             <option value="Public">Public</option>
           </select>
           <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 pointer-events-none" strokeWidth={1.75} />
         </div>
-      </div>
+      </div>}
 
       {/* Table */}
       {isLoading ? (
         <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
-      ) : docs.length === 0 ? (
-        <EmptyState onUpload={() => fileRef.current?.click()} />
-      ) : (
+      ) : docs.length > 0 && (
         <div className="overflow-x-auto border border-line rounded bg-card shadow-card">
           <table className="w-full border-collapse min-w-[760px]">
             <thead>
@@ -180,9 +186,9 @@ function DocRow({ doc, onVisChange, onDelete }: { doc: Document; onVisChange: (v
         </div>
       </td>
       <td className="px-[18px] py-[15px]">
-        {doc.status === 'Ready'      && <span className="badge badge-ready"><Check size={13} strokeWidth={2} />Ready</span>}
+        {doc.status === 'Ready' && <span className="badge badge-ready"><Check size={13} strokeWidth={2} />Ready</span>}
         {doc.status === 'Processing' && <span className="badge badge-processing"><div className="w-[13px] h-[13px] border-[1.5px] border-warn-ink border-t-transparent rounded-full animate-spin" />Processing</span>}
-        {doc.status === 'Failed'     && <span className="badge badge-failed"><span className="text-[13px]">✕</span>Failed</span>}
+        {doc.status === 'Failed' && <span className="badge badge-failed"><span className="text-[13px]">✕</span>Failed</span>}
       </td>
       <td className="px-[18px] py-[15px]">
         <div className="relative inline-flex items-center">
@@ -210,18 +216,6 @@ function DocRow({ doc, onVisChange, onDelete }: { doc: Document; onVisChange: (v
   )
 }
 
-function EmptyState({ onUpload }: { onUpload: () => void }) {
-  return (
-    <div className="card flex flex-col items-center py-16 px-6 text-center">
-      <div className="w-14 h-14 rounded-[14px] bg-tint text-accent grid place-items-center mb-[18px]">
-        <Inbox size={28} strokeWidth={1.75} />
-      </div>
-      <h3 className="text-[18px] font-bold">No documents yet</h3>
-      <p className="text-body text-ink-2 mt-[7px] max-w-[42ch] leading-relaxed">Upload your first policy, runbook or FAQ and OpsIQ will index it.</p>
-      <button onClick={onUpload} className="btn btn-primary mt-5"><Upload size={18} strokeWidth={1.75} />Upload document</button>
-    </div>
-  )
-}
 
 function DeleteModal({ doc, isPending, onConfirm, onClose }: { doc: Document; isPending: boolean; onConfirm: () => void; onClose: () => void }) {
   return (
