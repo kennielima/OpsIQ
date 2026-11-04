@@ -142,7 +142,7 @@ export function DocumentsPage() {
       {isLoading ? (
         <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
       ) : docs.length > 0 && (
-        <div className="overflow-x-auto border border-line rounded bg-card shadow-card">
+        <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]">
           <table className="w-full border-collapse min-w-[760px]">
             <thead>
               <tr>

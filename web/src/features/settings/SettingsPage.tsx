@@ -15,7 +15,9 @@ export function SettingsPage() {
     <section className="px-10 py-8 pb-24 max-w-screen w-full">
       <div className="mb-6">
         <h1 className="text-page-title">Settings</h1>
-        <p className="text-body text-ink-2 mt-1">Manage the keys, origins and people that can use this workspace.</p>
+        <p className="text-body text-ink-2 mt-1">Widget keys, allowed origins and team management. Visible to admins only.
+
+</p>
       </div>
 
       <div className="flex flex-col gap-5 max-w-[960px]">
@@ -73,7 +75,7 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
       desc="Publishable keys let your website widget ask questions against your Public documents. A new key is shown in full once — store it when you create it."
       action={<button onClick={() => createKey()} disabled={isPending} className="btn btn-primary btn-sm"><Plus size={16} strokeWidth={1.75} />Create key</button>}
     >
-      <div className="overflow-x-auto border border-line rounded bg-card shadow-card">
+      <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]">
         <table className="w-full border-collapse min-w-[560px]">
           <thead>
             <tr>
@@ -211,7 +213,7 @@ function TeamSection() {
       </form>
 
       {members.length > 0 && (
-        <div className="overflow-x-auto border border-line rounded bg-card shadow-card mt-[22px]">
+        <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)] mt-[22px]">
           <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr>
