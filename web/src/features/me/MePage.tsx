@@ -1,20 +1,29 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { Lock, Eye, EyeOff, User } from 'lucide-react'
+import { Lock, Eye, EyeOff, User, LogOut } from 'lucide-react'
 import { authApi } from '../../api/auth'
+import { useClearAuth } from '../../hooks/useAuth'
 import { queryKeys } from '../../lib/queryKeys'
 import type { MeResponse } from '../../types/api'
 
 export function MePage() {
   const { data: user } = useQuery<MeResponse>({ queryKey: queryKeys.me() })
+  const clearAuth = useClearAuth()
+  const [confirmLogout, setConfirmLogout] = useState(false)
+
+  async function handleLogout() {
+    await authApi.logout()
+    clearAuth()
+    window.location.replace('/login')
+  }
 
   const displayName = user?.displayName ?? user?.name ?? '—'
   const initials = displayName.slice(0, 2).toUpperCase()
   const roleLabel = user?.role === 'TenantAdmin' ? 'Admin' : 'Staff'
 
   return (
-    <section className="px-10 py-8 pb-24 max-w-screen w-full">
+    <section className="px-4 py-6 pb-24 sm:px-10 sm:py-8 max-w-screen w-full">
       <div className="mb-6">
         <h1 className="text-page-title">My profile</h1>
         <p className="text-body text-ink-2 mt-1">Your account details and password.</p>
@@ -36,7 +45,7 @@ export function MePage() {
               <div className="text-[13px] text-ink-2 mt-[2px]">{user?.email}</div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-[14px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[14px]">
             <div className="field">
               <label>Display name</label>
               <input className="inp" value={displayName} readOnly />
@@ -58,6 +67,29 @@ export function MePage() {
 
         {/* Change password */}
         <ChangePasswordCard />
+
+        <div className="card p-[22px] flex items-center justify-between">
+          <div>
+            <div className="text-[14px] font-semibold text-ink">Sign out</div>
+            <div className="text-[13px] text-ink-2 mt-[2px]">Are you sure you want to log out?</div>
+          </div>
+          <button onClick={() => setConfirmLogout(true)} className="btn btn-ghost btn-sm text-[#B91C1C] hover:text-[#991B1B] inline-flex items-center gap-[6px]">
+            <LogOut size={16} strokeWidth={1.75} />Sign out
+          </button>
+
+          {confirmLogout && (
+            <div className="fixed inset-0 bg-ink/45 z-modal grid place-items-center p-6" onClick={e => { if (e.target === e.currentTarget) setConfirmLogout(false) }}>
+              <div className="bg-card rounded shadow-pop w-full max-w-[380px] p-6">
+                <h3 className="text-[17px] font-bold text-ink">Sign out</h3>
+                <p className="text-body text-ink-2 mt-2">Are you sure you want to sign out?</p>
+                <div className="flex justify-end gap-[10px] mt-6">
+                  <button onClick={() => setConfirmLogout(false)} className="btn btn-secondary btn-sm">Cancel</button>
+                  <button onClick={handleLogout} className="btn btn-sm bg-[#B91C1C] text-white hover:bg-[#991B1B] border-transparent">Sign out</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   )
