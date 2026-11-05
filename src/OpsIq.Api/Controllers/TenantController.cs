@@ -84,6 +84,23 @@ public class TenantsController : ControllerBase
         return Ok(new { user.Id, user.Email, user.DisplayName, user.TenantId });
     }
 
+    [HttpGet]
+    [Route("{tenantId}/keys")]
+    [Authorize(Roles = "TenantAdmin")]
+    public async Task<IActionResult> ListKeys(Guid tenantId)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var keys = await _context.ApiKeys
+            .Where(k => k.TenantId == tenantId && k.Type == ApiKeyType.PublicKey)
+            .OrderByDescending(k => k.CreatedAt)
+            .Select(k => new { k.Id, k.TenantId, k.Prefix, k.CreatedAt, k.LastUsedAt, k.RevokedAt, Status = k.RevokedAt == null ? "Active" : "Revoked" })
+            .ToListAsync();
+
+        return Ok(keys);
+    }
+
     [HttpPost]
     [Route("{tenantId}/keys")]
     [Authorize(Roles = "TenantAdmin")]
@@ -102,6 +119,7 @@ public class TenantsController : ControllerBase
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             HashedKey = hashed,
+            Prefix = rawKey[..12],
             Type = ApiKeyType.PublicKey,
             CreatedAt = DateTime.UtcNow
         };
