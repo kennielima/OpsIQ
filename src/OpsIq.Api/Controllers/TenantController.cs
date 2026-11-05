@@ -188,6 +188,21 @@ public class TenantsController : ControllerBase
         return Ok(users);
     }
 
+    [HttpPatch("{tenantId}/users/{userId}/role")]
+    [Authorize(Roles = "TenantAdmin")]
+    public async Task<IActionResult> UpdateUserRole(Guid tenantId, Guid userId, [FromBody] string role)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null || user.TenantId != tenantId) return NotFound();
+
+        user.Role = role == "Admin" ? UserRole.TenantAdmin : UserRole.TenantUser;
+        await _userManager.UpdateAsync(user);
+        return NoContent();
+    }
+
     [HttpDelete("{tenantId}/users/{userId}")]
     [Authorize(Roles = "TenantAdmin")]
     public async Task<IActionResult> RemoveUser(Guid tenantId, Guid userId)
