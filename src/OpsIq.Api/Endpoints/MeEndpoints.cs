@@ -21,7 +21,7 @@ public static class MeEndpoints
             return Results.NoContent();
         });
 
-        group.MapGet("", (ClaimsPrincipal user) =>
+        group.MapGet("", async (ClaimsPrincipal user, UserManager<AppUser> userManager) =>
         {
             var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var tenantId = user.FindFirst("TenantId")?.Value;
@@ -29,7 +29,9 @@ public static class MeEndpoints
 
             var email = user.FindFirst(ClaimTypes.Email)?.Value;
             var role = user.FindFirst(ClaimTypes.Role)?.Value;
-            return Results.Ok(new { userId, email, tenantId, role });
+            var appUser = await userManager.GetUserAsync(user);
+            var displayName = appUser?.DisplayName;
+            return Results.Ok(new { userId, displayName, email, tenantId, role });
         });
     }
 }

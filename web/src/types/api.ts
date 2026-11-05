@@ -8,7 +8,7 @@ export interface MeResponse {
   email: string
   role: string        // raw value from backend: "TenantAdmin" | "TenantUser" | "SuperAdmin"
   tenantId: string
-  // name and tenantName not returned by backend — derive from email
+  displayName?: string
   name?: string
   tenantName?: string
 }

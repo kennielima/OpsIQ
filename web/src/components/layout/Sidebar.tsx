@@ -27,7 +27,8 @@ export function Sidebar() {
     return pathname.startsWith(to)
   }
 
-  const initials = (user?.name ?? user?.email ?? '??').slice(0, 2).toUpperCase()
+  const displayName = user?.displayName ?? user?.name ?? user?.email ?? ''
+  const initials = displayName.slice(0, 2).toUpperCase()
 
   return (
     <aside
@@ -104,9 +105,9 @@ export function Sidebar() {
         </div>
         <div className="min-w-0">
           <div className="text-[13.5px] font-semibold text-white truncate">
-            {user?.name ?? user?.email ?? ''}
+            {displayName}
           </div>
-          <div className="text-label text-ink-nav-2">{user?.role}</div>
+          <div className="text-label text-ink-nav-2">{user?.role === 'TenantAdmin' ? 'Admin' : 'Staff'}</div>
         </div>
         <button
           onClick={handleLogout}

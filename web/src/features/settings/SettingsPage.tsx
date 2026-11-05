@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Key, Link, Code, Users, Plus, Check, X, Copy, AlertTriangle } from 'lucide-react'
+import { Key, Link, Code, Users, Plus, Check, X, Copy, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-react'
 import { settingsApi } from '../../api/settings'
+import { authApi } from '../../api/auth'
 import { queryKeys } from '../../lib/queryKeys'
 import { addTeamMemberSchema, addOriginSchema, type AddTeamMemberInput, type AddOriginInput } from '../../lib/schemas'
 import type { CreateWidgetKeyResponse } from '../../types/api'
@@ -17,7 +18,7 @@ export function SettingsPage() {
         <h1 className="text-page-title">Settings</h1>
         <p className="text-body text-ink-2 mt-1">Widget keys, allowed origins and team management. Visible to admins only.
 
-</p>
+        </p>
       </div>
 
       <div className="flex flex-col gap-5 max-w-[960px]">
@@ -25,6 +26,7 @@ export function SettingsPage() {
         <AllowedOriginsSection />
         <EmbedSnippetSection />
         <TeamSection />
+        <ChangePasswordSection />
       </div>
 
       {newKey && <KeyCreatedModal keyData={newKey} onClose={() => setNewKey(null)} />}
@@ -75,7 +77,7 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
       desc="Publishable keys let your website widget ask questions against your Public documents. A new key is shown in full once — store it when you create it."
       action={<button onClick={() => createKey()} disabled={isPending} className="btn btn-primary btn-sm"><Plus size={16} strokeWidth={1.75} />Create key</button>}
     >
-      <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]">
+      <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
         <table className="w-full border-collapse min-w-[560px]">
           <thead>
             <tr>
@@ -129,17 +131,17 @@ function AllowedOriginsSection() {
   }
 
   return (
-    <SectionCard icon={<Link size={18} strokeWidth={1.75} />} title="Allowed origins" desc="The widget will only answer when it's embedded on one of these domains.">
+    <SectionCard icon={<Link size={18} strokeWidth={1.75} />} title="Allowed origins" desc="The widget only runs on these domains. Requests from other origins are rejected.">
       <form onSubmit={handleSubmit(add)} className="flex gap-[10px] mb-[6px]">
         <input className="inp font-mono text-[13px] max-w-[420px]" placeholder="https://help.yourcompany.com" {...register('origin')} />
         <button type="submit" disabled={isPending} className="btn btn-secondary btn-sm"><Plus size={16} strokeWidth={1.75} />Add origin</button>
       </form>
       {errors.origin && <p className="text-[12px] text-fail-ink mb-2">{errors.origin.message}</p>}
-      <div className="mt-2">
+      <div className="mt-2 border border-line rounded-sm shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
         {origins.length === 0
-          ? <p className="text-body text-ink-2">No origins yet.</p>
+          ? <p className="text-body text-ink-2 px-4 py-3">No origins yet.</p>
           : origins.map(o => (
-            <div key={o} className="flex items-center gap-[10px] py-[11px] border-b border-line-soft last:border-b-0">
+            <div key={o} className="flex items-center gap-[10px] px-4 py-[11px] border-b border-line-soft last:border-b-0">
               <Link size={16} strokeWidth={1.75} className="text-ink-2 flex-none" />
               <span className="flex-1 font-mono text-[13px] text-ink">{o}</span>
               <button onClick={() => remove(o)} disabled={isPending} className="btn btn-ghost btn-sm">Remove</button>
@@ -219,7 +221,7 @@ function TeamSection() {
       </form>
 
       {members.length > 0 && (
-        <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)] mt-[22px]">
+        <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)] mt-[22px]">
           <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr>
@@ -269,7 +271,7 @@ function KeyCreatedModal({ keyData, onClose }: { keyData: CreateWidgetKeyRespons
         </h3>
         <p className="text-body text-ink-2 leading-relaxed mt-3">Copy this key now and store it somewhere safe. For security, OpsIQ won't show it again.</p>
 
-        <div className="flex items-center gap-[10px] bg-[#FAFBFC] border border-line rounded-sm px-[14px] py-3 mt-4">
+        <div className="flex items-center gap-[10px] bg-[#FAFBFC] border border-line rounded-sm shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)] px-[14px] py-3 mt-4">
           <code className="font-mono text-[13px] text-ink flex-1 break-all">{keyData.rawKey}</code>
           <button onClick={handleCopy} className="btn btn-secondary btn-sm flex-none">
             <Copy size={14} strokeWidth={1.75} />{copied ? 'Copied' : 'Copy'}
@@ -286,5 +288,51 @@ function KeyCreatedModal({ keyData, onClose }: { keyData: CreateWidgetKeyRespons
         </div>
       </div>
     </div>
+  )
+}
+
+function ChangePasswordSection() {
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<{ currentPassword: string; newPassword: string }>()
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: authApi.resetPassword,
+    onSuccess: () => { setSuccess(true); setErrorMsg(null); reset(); setTimeout(() => setSuccess(false), 3000) },
+    onError: () => setErrorMsg('Current password is incorrect or the request failed.'),
+  })
+
+  return (
+    <SectionCard icon={<Lock size={18} strokeWidth={1.75} />} title="Change password" desc="Update the password for your account.">
+      <form onSubmit={handleSubmit(d => mutate(d))} className="grid gap-[14px] max-w-[420px]">
+        {errorMsg && <p className="text-[12px] text-fail-ink">{errorMsg}</p>}
+        {success && <p className="text-[12px] text-ok-ink">Password updated successfully.</p>}
+        <div className="field">
+          <label>Current password</label>
+          <div className="relative">
+            <input type={showCurrent ? 'text' : 'password'} className="inp pr-11" {...register('currentPassword', { required: true })} />
+            <button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink">
+              {showCurrent ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
+            </button>
+          </div>
+          {errors.currentPassword && <p className="text-[12px] text-fail-ink">Required</p>}
+        </div>
+        <div className="field">
+          <label>New password</label>
+          <div className="relative">
+            <input type={showNew ? 'text' : 'password'} className="inp pr-11" {...register('newPassword', { required: true, minLength: 8 })} />
+            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink">
+              {showNew ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
+            </button>
+          </div>
+          {errors.newPassword && <p className="text-[12px] text-fail-ink">Min 8 characters</p>}
+        </div>
+        <div>
+          <button type="submit" disabled={isPending} className="btn btn-primary">{isPending ? 'Saving…' : 'Update password'}</button>
+        </div>
+      </form>
+    </SectionCard>
   )
 }
