@@ -35,8 +35,15 @@ export const settingsApi = {
     apiClient.put<void>(`/tenants/${tenantId()}/origins`, origins),
 
   // ── Team ──────────────────────────────────────────────────────
-  // No list endpoint — return empty
-  listTeamMembers: (): Promise<TeamMember[]> => Promise.resolve([]),
+  listTeamMembers: (): Promise<TeamMember[]> =>
+    apiClient.get<{ id: string; email: string; displayName: string; role: number }[]>(
+      `/tenants/${tenantId()}/users`
+    ).then(users => users.map(u => ({
+      id: u.id,
+      name: u.displayName,
+      email: u.email,
+      role: u.role === 1 ? 'Admin' : 'Staff' as 'Admin' | 'Staff',
+    }))),
 
   addTeamMember: (body: { name: string; email: string; temporaryPassword: string; role: string }) =>
     apiClient.post<{ id: string; email: string; displayName: string; tenantId: string }>(
@@ -52,4 +59,7 @@ export const settingsApi = {
       email: r.email,
       role: body.role as 'Admin' | 'Staff',
     })),
+
+  removeTeamMember: (userId: string): Promise<void> =>
+    apiClient.delete<void>(`/tenants/${tenantId()}/users/${userId}`),
 }

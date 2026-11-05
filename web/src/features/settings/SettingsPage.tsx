@@ -81,18 +81,19 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
         <table className="w-full border-collapse min-w-[560px]">
           <thead>
             <tr>
-              {['Key', 'Created', 'Status', ''].map(h => (
+              {['Key', 'Created', 'Last used', 'Status', ''].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-[11.5px] font-semibold tracking-[0.05em] uppercase text-ink-2 border-b border-line bg-[#FAFBFC]" style={h === '' ? { textAlign: 'right' } : {}}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {keys.length === 0 ? (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-body text-ink-2">No keys yet.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-body text-ink-2">No keys yet.</td></tr>
             ) : keys.map(k => (
               <tr key={k.id} className="hover:bg-[#FAFBFC] border-b border-line-soft last:border-b-0">
                 <td className="px-4 py-3 font-mono text-[13px] text-ink">{k.prefix}…</td>
                 <td className="px-4 py-3 text-[13px] text-ink-2 tabular-nums">{new Date(k.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                <td className="px-4 py-3 text-[13px] text-ink-2 tabular-nums">{k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center gap-[6px] text-[12px] font-semibold px-[9px] py-[3px] rounded-full ${k.status === 'Active' ? 'bg-ok-bg text-ok-ink' : 'bg-[#EEF0F3] text-ink-2'}`}>
                     {k.status === 'Active' ? <Check size={12} strokeWidth={2} /> : <X size={12} strokeWidth={2} />}
@@ -194,6 +195,10 @@ function TeamSection() {
     mutationFn: settingsApi.addTeamMember,
     onSuccess: () => { reset(); qc.invalidateQueries({ queryKey: queryKeys.settings.team() }) },
   })
+  const { mutate: removeMember } = useMutation({
+    mutationFn: settingsApi.removeTeamMember,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.settings.team() }),
+  })
 
   return (
     <SectionCard icon={<Users size={18} strokeWidth={1.75} />} title="Team" desc="Add teammates to this workspace. Admins manage settings; staff can ask questions and manage documents.">
@@ -256,7 +261,7 @@ function TeamSection() {
                     <span className={`chip ${m.role === 'Admin' ? 'chip-admin' : 'chip-internal'}`}>{m.role}</span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {m.role !== 'Admin' && <button className="btn btn-ghost btn-sm">Remove</button>}
+                    {m.role !== 'Admin' && <button onClick={() => removeMember(m.id)} className="btn btn-ghost btn-sm">Remove</button>}
                   </td>
                 </tr>
               ))}

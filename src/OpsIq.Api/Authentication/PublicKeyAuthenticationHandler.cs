@@ -36,6 +36,9 @@ public class PublicKeyAuthenticationHandler : AuthenticationHandler<Authenticati
         if (pkKey.Type != ApiKeyType.PublicKey || pkKey.RevokedAt != null)
             return AuthenticateResult.Fail("Invalid or Revoked Key");
 
+        pkKey.LastUsedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
         var claims = new[]
         {
             new Claim("TenantId", pkKey.TenantId.ToString())

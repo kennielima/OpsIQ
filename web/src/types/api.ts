@@ -63,6 +63,7 @@ export interface WidgetKey {
   id: string
   prefix: string
   createdAt: string
+  lastUsedAt?: string | null
   status: 'Active' | 'Revoked'
 }
 
