@@ -91,7 +91,7 @@ psql -c "CREATE EXTENSION IF NOT EXISTS vector;"
 # 2. Configure appsettings.Development.json
 # {
 #   "ConnectionStrings": { "DefaultConnection": "Host=localhost;Database=opsiq;Username=...;Password=..." },
-#   "Gemini": { "ApiKey": "..." },
+#   "OpenAI": { "ApiKey": "..." },
 #   "SUPERADMIN_EMAIL": "admin@example.com",
 #   "SUPERADMIN_PASSWORD": "..."
 # }
@@ -102,27 +102,29 @@ dotnet ef database update --project src/OpsIq.Infrastructure --startup-project s
 # 4. Run
 dotnet run --project src/OpsIq.Api
 
-# Scalar UI at http://localhost:5160/scalar/v1
+# Scalar UI at http://localhost:5088/scalar/v1
 ```
 
 A super-admin user is auto-provisioned on first run from the env config.
 
 ## API surface
 
-| Endpoint                         | Method              | Auth                    |
-| -------------------------------- | ------------------- | ----------------------- |
-| `/api/auth/login`                | POST                | Anonymous               |
-| `/api/auth/logout`               | POST                | Cookie                  |
-| `/api/tenants`                      | POST                | Cookie (SuperAdmin)    |
-| `/api/tenants/{id}/users`           | POST                | Cookie (TenantAdmin)   |
-| `/api/tenants/{id}/keys`            | POST                | Cookie (TenantAdmin)   |
-| `/api/tenants/{id}/keys/{keyId}`    | DELETE              | Cookie (TenantAdmin)   |
-| `/api/tenants/{id}/keys/sk`         | POST                | Cookie (TenantAdmin)   |
-| `/api/tenants/{id}/keys/sk/{keyId}` | DELETE              | Cookie (TenantAdmin)   |
-| `/api/tenants/{id}/origins`         | PUT                 | Cookie (TenantAdmin)   |
-| `/api/documents`                    | GET / POST / DELETE | Cookie                 |
-| `/api/documents/{id}`               | PATCH               | Cookie (TenantAdmin)   |
-| `/api/query/ask`                 | POST                | Cookie                  |
-| `/api/widget/query`              | POST                | `pk_`                   |
-| `/api/me`                        | GET                 | Cookie                  |
-| `/api/me/resetpassword`          | GET                 | Cookie                  |
+| Endpoint                                  | Method              | Auth                  |
+| ----------------------------------------- | ------------------- | --------------------- |
+| `/api/auth/login`                         | POST                | Anonymous             |
+| `/api/auth/logout`                        | POST                | Cookie                |
+| `/api/tenants`                            | POST                | Cookie (SuperAdmin)   |
+| `/api/tenants/{id}/users`                 | GET / POST          | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/users/{userId}`        | DELETE              | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/users/{userId}/role`   | PATCH               | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/keys`                  | GET / POST          | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/keys/{keyId}`          | DELETE              | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/keys/sk`               | POST                | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/keys/sk/{keyId}`       | DELETE              | Cookie (TenantAdmin)  |
+| `/api/tenants/{id}/origins`               | GET / PUT           | Cookie (TenantAdmin)  |
+| `/api/documents`                          | GET / POST / DELETE | Cookie                |
+| `/api/documents/{id}`                     | PATCH               | Cookie (TenantAdmin)  |
+| `/api/query/ask`                          | POST                | Cookie                |
+| `/api/widget/query`                       | POST                | `pk_`                 |
+| `/api/me`                                 | GET                 | Cookie                |
+| `/api/me/resetpassword`                   | POST                | Cookie                |
