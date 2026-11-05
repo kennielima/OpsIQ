@@ -85,7 +85,12 @@ function ConfirmModal({ title, message, confirmLabel = 'Confirm', isPending, onC
 function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKeyResponse) => void }) {
   const qc = useQueryClient()
   const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [showRevoked, setShowRevoked] = useState(false)
   const { data: keys = [] } = useQuery({ queryKey: queryKeys.settings.widgetKeys(), queryFn: settingsApi.listWidgetKeys })
+
+  const activeKeys = keys.filter(k => k.status === 'Active')
+  const revokedKeys = keys.filter(k => k.status === 'Revoked').slice(0, 10)
+  const visibleKeys = showRevoked ? [...activeKeys, ...revokedKeys] : activeKeys
   const { mutate: createKey, isPending } = useMutation({
     mutationFn: settingsApi.createWidgetKey,
     onSuccess: data => { onKeyCreated(data); qc.invalidateQueries({ queryKey: queryKeys.settings.widgetKeys() }) },
@@ -102,6 +107,19 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
       desc="Publishable keys let your website widget ask questions against your Public documents. A new key is shown in full once, store it when you create it."
       action={<button onClick={() => createKey()} disabled={isPending} className="btn btn-primary btn-sm"><Plus size={16} strokeWidth={1.75} />Create key</button>}
     >
+      {keys.some(k => k.status === 'Revoked') && (
+        <div className="inline-flex items-center bg-[#F0F2F5] rounded-full p-[3px] mb-3">
+          {(['Active', 'All'] as const).map(opt => (
+            <button
+              key={opt}
+              onClick={() => setShowRevoked(opt === 'All')}
+              className={`h-[28px] px-4 rounded-full text-[12px] font-semibold transition-colors border-none cursor-pointer ${(opt === 'Active') === !showRevoked ? 'bg-white text-ink shadow-sm' : 'bg-transparent text-ink-2 hover:text-ink'}`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
         <table className="w-full border-collapse min-w-[560px]">
           <thead>
@@ -112,9 +130,9 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
             </tr>
           </thead>
           <tbody>
-            {keys.length === 0 ? (
+            {visibleKeys.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-body text-ink-2">No keys yet.</td></tr>
-            ) : keys.map(k => (
+            ) : visibleKeys.map(k => (
               <tr key={k.id} className="hover:bg-[#FAFBFC] border-b border-line-soft last:border-b-0">
                 <td className="px-4 py-3 font-mono text-[13px] text-ink">{k.prefix}…</td>
                 <td className="px-4 py-3 text-[13px] text-ink-2 tabular-nums">{new Date(k.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
@@ -389,28 +407,47 @@ function KeyCreatedModal({ keyData, onClose }: { keyData: CreateWidgetKeyRespons
   function handleCopy() { void navigator.clipboard.writeText(keyData.rawKey); setCopied(true); setTimeout(() => setCopied(false), 1800) }
 
   return (
-    <div className="fixed inset-0 bg-ink/45 z-modal grid place-items-center p-6" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="bg-card rounded shadow-pop w-full max-w-[520px] p-6">
-        <h3 className="text-[18px] font-bold flex items-center gap-[10px]">
-          <span className="w-[38px] h-[38px] rounded-[10px] bg-warn-bg text-warn-ink grid place-items-center flex-none"><Key size={20} strokeWidth={2} /></span>
-          Key created
-        </h3>
-        <p className="text-body text-ink-2 leading-relaxed mt-3">Copy this key now and store it somewhere safe. For security, OpsIQ won't show it again.</p>
-
-        <div className="flex items-center gap-[10px] bg-[#FAFBFC] border border-line rounded-sm shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)] px-[14px] py-3 mt-4">
-          <code className="font-mono text-[13px] text-ink flex-1 break-all">{keyData.rawKey}</code>
-          <button onClick={handleCopy} className="btn btn-secondary btn-sm flex-none">
-            <Copy size={14} strokeWidth={1.75} />{copied ? 'Copied' : 'Copy'}
+    <div className="fixed inset-0 bg-ink/45 z-modal grid place-items-center p-6">
+      <div className="bg-[#F0F2FA] rounded-2xl shadow-pop w-full max-w-[540px] overflow-hidden">
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 pt-6 pb-5">
+          <div className="flex items-center gap-4">
+            <div className="w-[52px] h-[52px] rounded-full bg-[#D6F5E3] text-[#1A7A47] grid place-items-center flex-none">
+              <Key size={24} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-bold text-ink">Key Created Successfully</h3>
+              <p className="text-[13px] text-ink-2 mt-[2px]">Your new widget API key is ready to use.</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-ink-2 hover:text-ink bg-transparent border-none p-1 mt-[2px]">
+            <X size={20} strokeWidth={1.75} />
           </button>
         </div>
 
-        <div className="flex items-start gap-[9px] bg-warn-bg text-warn-ink rounded-sm px-[13px] py-[11px] text-[12.5px] leading-relaxed mt-[14px]">
-          <AlertTriangle size={15} strokeWidth={2} className="flex-none mt-[1px]" />
-          Anyone with this key can query your Public documents from an allowed origin. Revoke it if it's ever exposed.
+        {/* Warning banner */}
+        <div className="mx-6 mb-5 bg-[#E4E8F7] rounded-xl px-4 py-4 flex items-start gap-3">
+          <AlertTriangle size={20} strokeWidth={2} className="text-accent flex-none mt-[1px]" />
+          <div>
+            <p className="text-[14px] font-bold text-ink">Save your secret token</p>
+            <p className="text-[13px] text-ink-2 mt-[2px] leading-snug">Make sure to copy your API key now. You will not be able to see it again once you close this window.</p>
+          </div>
         </div>
 
-        <div className="flex justify-end mt-[22px]">
-          <button onClick={onClose} className="btn btn-primary btn-sm">Done</button>
+        {/* Key box */}
+        <div className="mx-6 mb-6">
+          <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-ink-2 mb-2">Secret Widget API Key</p>
+          <div className="bg-[#0F1117] rounded-xl px-4 py-4 flex items-center gap-3">
+            <code className="font-mono text-[13px] text-[#4ADE80] flex-1 break-all leading-relaxed">{keyData.rawKey}</code>
+            <button onClick={handleCopy} className="flex-none flex items-center gap-[6px] bg-[#1E2535] hover:bg-[#2A3347] text-[#C9D6F2] text-[13px] font-semibold px-3 py-[7px] rounded-lg border border-[#2E3D57] transition-colors">
+              <Copy size={14} strokeWidth={1.75} />{copied ? 'Copied!' : 'Copy key'}
+            </button>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-[#D8DCF0] px-6 py-4 flex justify-end">
+          <button onClick={onClose} className="btn btn-primary px-8">Done</button>
         </div>
       </div>
     </div>
