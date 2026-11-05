@@ -73,11 +73,6 @@ export interface CreateWidgetKeyResponse {
   createdAt: string
 }
 
-export interface AllowedOrigin {
-  id: string
-  origin: string
-}
-
 export interface TeamMember {
   id: string
   name?: string

@@ -11,8 +11,8 @@ function tenantId(): string {
 
 export const settingsApi = {
   // ── Widget keys ──────────────────────────────────────────────
-  // No list endpoint exists on backend — return empty
-  listWidgetKeys: (): Promise<WidgetKey[]> => Promise.resolve([]),
+  listWidgetKeys: (): Promise<WidgetKey[]> =>
+    apiClient.get<WidgetKey[]>(`/tenants/${tenantId()}/keys`),
 
   createWidgetKey: (): Promise<CreateWidgetKeyResponse> =>
     apiClient.post<{ id: string; rawKey: string }>(
@@ -20,17 +20,19 @@ export const settingsApi = {
     ).then(r => ({
       id: r.id,
       rawKey: r.rawKey,
-      prefix: r.rawKey.slice(0, 16),
+      prefix: r.rawKey.slice(0, 12),
       createdAt: new Date().toISOString(),
     })),
 
   revokeWidgetKey: (id: string): Promise<void> =>
     apiClient.delete<void>(`/tenants/${tenantId()}/keys/${id}`),
 
-  // ── Allowed origins — not implemented on backend yet ─────────
-  listAllowedOrigins: (): Promise<import('../types/api').AllowedOrigin[]> => Promise.resolve([]),
-  addAllowedOrigin: (_origin: string): Promise<import('../types/api').AllowedOrigin> => Promise.resolve({ id: '', origin: _origin }),
-  removeAllowedOrigin: (_id: string): Promise<void> => Promise.resolve(),
+  // ── Allowed origins ──────────────────────────────────────────
+  listAllowedOrigins: (): Promise<string[]> =>
+    apiClient.get<string[]>(`/tenants/${tenantId()}/origins`),
+
+  setAllowedOrigins: (origins: string[]): Promise<void> =>
+    apiClient.put<void>(`/tenants/${tenantId()}/origins`, origins),
 
   // ── Team ──────────────────────────────────────────────────────
   // No list endpoint — return empty

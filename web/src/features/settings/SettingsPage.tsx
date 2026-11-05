@@ -113,18 +113,24 @@ function AllowedOriginsSection() {
   const qc = useQueryClient()
   const { data: origins = [] } = useQuery({ queryKey: queryKeys.settings.origins(), queryFn: settingsApi.listAllowedOrigins })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AddOriginInput>({ resolver: zodResolver(addOriginSchema) })
-  const { mutate: addOrigin, isPending } = useMutation({
-    mutationFn: ({ origin }: AddOriginInput) => settingsApi.addAllowedOrigin(origin),
-    onSuccess: () => { reset(); qc.invalidateQueries({ queryKey: queryKeys.settings.origins() }) },
-  })
-  const { mutate: removeOrigin } = useMutation({
-    mutationFn: settingsApi.removeAllowedOrigin,
+  const { mutate: setOrigins, isPending } = useMutation({
+    mutationFn: settingsApi.setAllowedOrigins,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.settings.origins() }),
   })
 
+  function add({ origin }: AddOriginInput) {
+    if (origins.includes(origin)) return
+    setOrigins([...origins, origin])
+    reset()
+  }
+
+  function remove(origin: string) {
+    setOrigins(origins.filter(o => o !== origin))
+  }
+
   return (
     <SectionCard icon={<Link size={18} strokeWidth={1.75} />} title="Allowed origins" desc="The widget will only answer when it's embedded on one of these domains.">
-      <form onSubmit={handleSubmit(d => addOrigin(d))} className="flex gap-[10px] mb-[6px]">
+      <form onSubmit={handleSubmit(add)} className="flex gap-[10px] mb-[6px]">
         <input className="inp font-mono text-[13px] max-w-[420px]" placeholder="https://help.yourcompany.com" {...register('origin')} />
         <button type="submit" disabled={isPending} className="btn btn-secondary btn-sm"><Plus size={16} strokeWidth={1.75} />Add origin</button>
       </form>
@@ -133,10 +139,10 @@ function AllowedOriginsSection() {
         {origins.length === 0
           ? <p className="text-body text-ink-2">No origins yet.</p>
           : origins.map(o => (
-            <div key={o.id} className="flex items-center gap-[10px] py-[11px] border-b border-line-soft last:border-b-0">
+            <div key={o} className="flex items-center gap-[10px] py-[11px] border-b border-line-soft last:border-b-0">
               <Link size={16} strokeWidth={1.75} className="text-ink-2 flex-none" />
-              <span className="flex-1 font-mono text-[13px] text-ink">{o.origin}</span>
-              <button onClick={() => removeOrigin(o.id)} className="btn btn-ghost btn-sm">Remove</button>
+              <span className="flex-1 font-mono text-[13px] text-ink">{o}</span>
+              <button onClick={() => remove(o)} disabled={isPending} className="btn btn-ghost btn-sm">Remove</button>
             </div>
           ))
         }
