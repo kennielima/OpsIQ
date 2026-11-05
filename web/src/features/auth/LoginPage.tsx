@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, Shield } from 'lucide-react'
+import { AlertCircle, Shield, Eye, EyeOff } from 'lucide-react'
 import { authApi } from '../../api/auth'
 import { HttpError } from '../../api/client'
 import { queryKeys } from '../../lib/queryKeys'
@@ -11,6 +12,7 @@ import { loginSchema, type LoginInput } from '../../lib/schemas'
 export function LoginPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [showPw, setShowPw] = useState(false)
 
   const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -96,13 +98,18 @@ export function LoginPage() {
 
           <div className="field mb-[6px]">
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              className="inp"
-              {...register('password')}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPw ? 'text' : 'password'}
+                autoComplete="current-password"
+                className="inp pr-11"
+                {...register('password')}
+              />
+              <button type="button" onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink">
+                {showPw ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
+              </button>
+            </div>
             {errors.password && <p className="text-[12px] text-fail-ink mt-1">{errors.password.message}</p>}
           </div>
 

@@ -15,4 +15,7 @@ export const authApi = {
 
   me: () =>
     apiClient.get<MeResponse>('/me'),
+
+  resetPassword: (body: { currentPassword: string; newPassword: string }) =>
+    apiClient.post<void>('/me/resetpassword', body),
 }

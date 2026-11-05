@@ -20,7 +20,7 @@ export function Sidebar() {
   async function handleLogout() {
     await authApi.logout()
     clearAuth()
-    await router.navigate({ to: '/login' })
+    window.location.replace('/login')
   }
 
   function active(to: string) {
