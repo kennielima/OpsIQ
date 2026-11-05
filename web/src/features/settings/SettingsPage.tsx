@@ -74,7 +74,7 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
     <SectionCard
       icon={<Key size={18} strokeWidth={1.75} />}
       title="Widget keys"
-      desc="Publishable keys let your website widget ask questions against your Public documents. A new key is shown in full once — store it when you create it."
+      desc="Publishable keys let your website widget ask questions against your Public documents. A new key is shown in full once, store it when you create it."
       action={<button onClick={() => createKey()} disabled={isPending} className="btn btn-primary btn-sm"><Plus size={16} strokeWidth={1.75} />Create key</button>}
     >
       <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
@@ -155,7 +155,7 @@ function AllowedOriginsSection() {
 
 function EmbedSnippetSection() {
   const [copied, setCopied] = useState(false)
-  const snippet = `<script\n  src="https://cdn.opsiq.app/widget.js"\n  data-key="pk_acmepay_7Hq2..."\n  async></script>`
+  const snippet = `<script\n  src="https://cdn.opsiq.app/widget.js"\n  data-key="pk_acmepay_7Hq2..."\n async></script>`
 
   function handleCopy() {
     void navigator.clipboard.writeText(snippet)
@@ -165,12 +165,22 @@ function EmbedSnippetSection() {
 
   return (
     <SectionCard icon={<Code size={18} strokeWidth={1.75} />} title="Embed snippet" desc="Paste this just before the closing </body> tag on your site. Replace the key if you create a new one.">
-      <div className="relative bg-navy rounded-sm px-[18px] py-4 overflow-x-auto">
-        <button onClick={handleCopy} className="absolute top-[10px] right-[10px] bg-navy-pill border border-navy-line text-[#C9D6F2] h-8 px-[11px] rounded-[7px] inline-flex items-center gap-[6px] text-[12.5px] font-semibold hover:bg-[#1E2F4B] transition-colors">
-          <Copy size={14} strokeWidth={1.75} />
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-        <code className="font-mono text-[12.5px] text-[#C9D6F2] whitespace-pre leading-relaxed block">{snippet}</code>
+      <div className="bg-navy rounded-sm overflow-hidden">
+        <div className="flex items-center justify-between px-[18px] py-[10px] border-b border-navy-line">
+          <span className="text-[11.5px] font-semibold text-ink-nav-2 uppercase tracking-[0.06em]">HTML</span>
+          <button onClick={handleCopy} className="bg-navy-pill border border-navy-line text-[#C9D6F2] h-7 px-[10px] rounded-[6px] inline-flex items-center gap-[6px] text-[12px] font-semibold hover:bg-[#1E2F4B] transition-colors">
+            <Copy size={13} strokeWidth={1.75} />
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+        <div className="overflow-x-auto px-[18px] py-4">
+          <code className="font-mono text-[12.5px] leading-relaxed block whitespace-pre">
+            <span className="text-indigo-400">{'<script'}</span>{'\n'}
+            <span>{'  '}</span><span className="text-green-300">src</span><span className="text-[#ABB2BF]">{'='}</span><span className="text-yellow-500">{'"https://cdn.opsiq.app/widget.js"'}</span>{'\n'}
+            <span>{'  '}</span><span className="text-green-300">data-key</span><span className="text-[#ABB2BF]">{'='}</span><span className="text-yellow-500">{'"pk_acmepay_7Hq2..."'}</span>{'\n'}
+            <span>{'  '}</span><span className="text-green-300">async</span><span className="text-indigo-400">{'></script>'}</span>
+          </code>
+        </div>
       </div>
     </SectionCard>
   )
