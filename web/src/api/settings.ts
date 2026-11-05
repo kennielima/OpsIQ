@@ -62,4 +62,7 @@ export const settingsApi = {
 
   removeTeamMember: (userId: string): Promise<void> =>
     apiClient.delete<void>(`/tenants/${tenantId()}/users/${userId}`),
+
+  updateMemberRole: (userId: string, role: 'Admin' | 'Staff'): Promise<void> =>
+    apiClient.patch<void>(`/tenants/${tenantId()}/users/${userId}/role`, role),
 }

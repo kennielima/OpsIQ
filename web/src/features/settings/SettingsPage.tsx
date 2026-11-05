@@ -7,7 +7,7 @@ import { settingsApi } from '../../api/settings'
 import { authApi } from '../../api/auth'
 import { queryKeys } from '../../lib/queryKeys'
 import { addTeamMemberSchema, addOriginSchema, type AddTeamMemberInput, type AddOriginInput } from '../../lib/schemas'
-import type { CreateWidgetKeyResponse } from '../../types/api'
+import type { CreateWidgetKeyResponse, TeamMember } from '../../types/api'
 
 export function SettingsPage() {
   const [newKey, setNewKey] = useState<CreateWidgetKeyResponse | null>(null)
@@ -58,16 +58,41 @@ function SectionCard({ icon, title, desc, action, children }: {
   )
 }
 
+function ConfirmModal({ title, message, confirmLabel = 'Confirm', isPending, onConfirm, onClose }: {
+  title: string
+  message: string
+  confirmLabel?: string
+  isPending?: boolean
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 bg-ink/45 z-modal grid place-items-center p-6" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="bg-card rounded shadow-pop w-full max-w-[400px] p-6">
+        <h3 className="text-[17px] font-bold text-ink">{title}</h3>
+        <p className="text-body text-ink-2 mt-2 leading-relaxed">{message}</p>
+        <div className="flex justify-end gap-[10px] mt-6">
+          <button onClick={onClose} className="btn btn-secondary btn-sm">Cancel</button>
+          <button onClick={onConfirm} disabled={isPending} className="btn btn-sm bg-[#B91C1C] text-white hover:bg-[#991B1B] border-transparent">
+            {isPending ? 'Removing…' : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKeyResponse) => void }) {
   const qc = useQueryClient()
+  const [revokingId, setRevokingId] = useState<string | null>(null)
   const { data: keys = [] } = useQuery({ queryKey: queryKeys.settings.widgetKeys(), queryFn: settingsApi.listWidgetKeys })
   const { mutate: createKey, isPending } = useMutation({
     mutationFn: settingsApi.createWidgetKey,
     onSuccess: data => { onKeyCreated(data); qc.invalidateQueries({ queryKey: queryKeys.settings.widgetKeys() }) },
   })
-  const { mutate: revokeKey } = useMutation({
+  const { mutate: revokeKey, isPending: isRevoking } = useMutation({
     mutationFn: settingsApi.revokeWidgetKey,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.settings.widgetKeys() }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.settings.widgetKeys() }); setRevokingId(null) },
   })
 
   return (
@@ -101,34 +126,42 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {k.status === 'Active' && <button onClick={() => revokeKey(k.id)} className="btn btn-ghost btn-sm">Revoke</button>}
+                  {k.status === 'Active' && <button onClick={() => setRevokingId(k.id)} className="btn btn-ghost btn-sm text-[#B91C1C] hover:text-[#991B1B]">Revoke</button>}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {revokingId && (
+        <ConfirmModal
+          title="Revoke key"
+          message="This key will stop working immediately. Any widget using it will lose access. This cannot be undone."
+          confirmLabel="Revoke key"
+          isPending={isRevoking}
+          onConfirm={() => revokeKey(revokingId)}
+          onClose={() => setRevokingId(null)}
+        />
+      )}
     </SectionCard>
   )
 }
 
 function AllowedOriginsSection() {
   const qc = useQueryClient()
+  const [removingOrigin, setRemovingOrigin] = useState<string | null>(null)
   const { data: origins = [] } = useQuery({ queryKey: queryKeys.settings.origins(), queryFn: settingsApi.listAllowedOrigins })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AddOriginInput>({ resolver: zodResolver(addOriginSchema) })
   const { mutate: setOrigins, isPending } = useMutation({
     mutationFn: settingsApi.setAllowedOrigins,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.settings.origins() }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.settings.origins() }); setRemovingOrigin(null) },
   })
 
   function add({ origin }: AddOriginInput) {
     if (origins.includes(origin)) return
     setOrigins([...origins, origin])
     reset()
-  }
-
-  function remove(origin: string) {
-    setOrigins(origins.filter(o => o !== origin))
   }
 
   return (
@@ -145,11 +178,22 @@ function AllowedOriginsSection() {
             <div key={o} className="flex items-center gap-[10px] px-4 py-[11px] border-b border-line-soft last:border-b-0">
               <Link size={16} strokeWidth={1.75} className="text-ink-2 flex-none" />
               <span className="flex-1 font-mono text-[13px] text-ink">{o}</span>
-              <button onClick={() => remove(o)} disabled={isPending} className="btn btn-ghost btn-sm">Remove</button>
+              <button onClick={() => setRemovingOrigin(o)} disabled={isPending} className="btn btn-ghost btn-sm text-[#B91C1C] hover:text-[#991B1B]">Remove</button>
             </div>
           ))
         }
       </div>
+
+      {removingOrigin && (
+        <ConfirmModal
+          title="Remove origin"
+          message={`Remove "${removingOrigin}"? The widget will stop working on this domain immediately.`}
+          confirmLabel="Remove"
+          isPending={isPending}
+          onConfirm={() => setOrigins(origins.filter(o => o !== removingOrigin))}
+          onClose={() => setRemovingOrigin(null)}
+        />
+      )}
     </SectionCard>
   )
 }
@@ -189,15 +233,21 @@ function EmbedSnippetSection() {
 
 function TeamSection() {
   const qc = useQueryClient()
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
+  const [removingMember, setRemovingMember] = useState<TeamMember | null>(null)
   const { data: members = [] } = useQuery({ queryKey: queryKeys.settings.team(), queryFn: settingsApi.listTeamMembers })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AddTeamMemberInput>({ resolver: zodResolver(addTeamMemberSchema) })
   const { mutate: addMember, isPending } = useMutation({
     mutationFn: settingsApi.addTeamMember,
     onSuccess: () => { reset(); qc.invalidateQueries({ queryKey: queryKeys.settings.team() }) },
   })
-  const { mutate: removeMember } = useMutation({
+  const { mutate: removeMember, isPending: isRemoving } = useMutation({
     mutationFn: settingsApi.removeTeamMember,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.settings.team() }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.settings.team() }); setRemovingMember(null) },
+  })
+  const { mutate: updateRole, isPending: isUpdatingRole } = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: 'Admin' | 'Staff' }) => settingsApi.updateMemberRole(id, role),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.settings.team() }); setEditingMember(null) },
   })
 
   return (
@@ -226,7 +276,6 @@ function TeamSection() {
                 <option value="Staff">Staff</option>
                 <option value="Admin">Admin</option>
               </select>
-              <X size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 pointer-events-none rotate-0" strokeWidth={1.75} />
             </div>
           </div>
           <div className="col-span-2">
@@ -240,8 +289,8 @@ function TeamSection() {
           <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr>
-                {['Member', 'Email', 'Role', ''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-[11.5px] font-semibold tracking-[0.05em] uppercase text-ink-2 border-b border-line bg-[#FAFBFC]">{h}</th>
+                {['Member', 'Email', 'Role', '', ''].map((h, i) => (
+                  <th key={i} className="text-left px-4 py-3 text-[11.5px] font-semibold tracking-[0.05em] uppercase text-ink-2 border-b border-line bg-[#FAFBFC]">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -258,10 +307,15 @@ function TeamSection() {
                   </td>
                   <td className="px-4 py-3 text-[13px] text-ink-2">{m.email}</td>
                   <td className="px-4 py-3">
-                    <span className={`chip ${m.role === 'Admin' ? 'chip-admin' : 'chip-internal'}`}>{m.role}</span>
+                    <span className={`inline-flex items-center h-[26px] px-[10px] rounded-full border text-[12px] font-semibold ${m.role === 'Admin' ? 'bg-tint text-accent border-tint-line' : 'bg-[#EEF0F3] text-ink-2 border-line'}`}>
+                      {m.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => setEditingMember(m)} className="text-[13px] font-semibold text-accent hover:text-accent/80 bg-transparent border-none p-0 cursor-pointer">Edit</button>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {m.role !== 'Admin' && <button onClick={() => removeMember(m.id)} className="btn btn-ghost btn-sm">Remove</button>}
+                    <button onClick={() => setRemovingMember(m)} className="btn btn-ghost btn-sm text-[#B91C1C] hover:text-[#991B1B]">Remove</button>
                   </td>
                 </tr>
               ))}
@@ -269,7 +323,64 @@ function TeamSection() {
           </table>
         </div>
       )}
+
+      {editingMember && (
+        <EditRoleModal
+          member={editingMember}
+          isPending={isUpdatingRole}
+          onConfirm={role => updateRole({ id: editingMember.id, role })}
+          onClose={() => setEditingMember(null)}
+        />
+      )}
+
+      {removingMember && (
+        <ConfirmModal
+          title="Remove team member"
+          message={`Remove ${removingMember.name ?? removingMember.email} from this workspace? They will lose access immediately.`}
+          confirmLabel="Remove member"
+          isPending={isRemoving}
+          onConfirm={() => removeMember(removingMember.id)}
+          onClose={() => setRemovingMember(null)}
+        />
+      )}
     </SectionCard>
+  )
+}
+
+function EditRoleModal({ member, isPending, onConfirm, onClose }: {
+  member: TeamMember
+  isPending: boolean
+  onConfirm: (role: 'Admin' | 'Staff') => void
+  onClose: () => void
+}) {
+  const [selected, setSelected] = useState<'Admin' | 'Staff'>(member.role)
+
+  return (
+    <div className="fixed inset-0 bg-ink/45 z-modal grid place-items-center p-6" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="bg-card rounded shadow-pop w-full max-w-[400px] p-6">
+        <h3 className="text-[17px] font-bold">Change role</h3>
+        <p className="text-body text-ink-2 mt-1">Update role for <span className="font-semibold text-ink">{member.name ?? member.email}</span>.</p>
+
+        <div className="flex flex-col gap-[10px] mt-5">
+          {(['Admin', 'Staff'] as const).map(r => (
+            <label key={r} className={`flex items-center gap-[12px] px-[14px] py-[12px] rounded border cursor-pointer transition-colors ${selected === r ? 'border-accent bg-tint' : 'border-line bg-card hover:bg-[#FAFBFC]'}`}>
+              <input type="radio" name="role" value={r} checked={selected === r} onChange={() => setSelected(r)} className="accent-accent" />
+              <div>
+                <div className="text-[13.5px] font-semibold text-ink">{r}</div>
+                <div className="text-[12px] text-ink-2">{r === 'Admin' ? 'Can manage settings, keys, and team members' : 'Can ask questions and manage documents'}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <div className="flex justify-end gap-[10px] mt-[22px]">
+          <button onClick={onClose} className="btn btn-secondary btn-sm">Cancel</button>
+          <button onClick={() => onConfirm(selected)} disabled={isPending || selected === member.role} className="btn btn-primary btn-sm">
+            {isPending ? 'Saving…' : 'Save changes'}
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
