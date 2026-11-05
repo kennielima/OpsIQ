@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useRouter, useRouterState } from '@tanstack/react-router'
 import {
   MessageSquare, FileText, Clock, Settings, LogOut,
@@ -11,11 +12,12 @@ const NAV = [
   { label: 'History',   to: '/history',   Icon: Clock },
 ] as const
 
-export function Sidebar() {
+export function Sidebar({ onClose }: { onClose?: () => void } = {}) {
   const { user, isAdmin } = useAuth()
   const clearAuth = useClearAuth()
   const router = useRouter()
   const pathname = useRouterState({ select: s => s.location.pathname })
+  const [confirmLogout, setConfirmLogout] = useState(false)
 
   async function handleLogout() {
     await authApi.logout()
@@ -70,6 +72,7 @@ export function Sidebar() {
           <Link
             key={to}
             to={to}
+            onClick={onClose}
             aria-current={active(to) ? 'page' : undefined}
             className={`flex items-center gap-[11px] h-control px-3 rounded-sm font-medium text-body border-none w-full transition-colors ${
               active(to)
@@ -85,6 +88,7 @@ export function Sidebar() {
         {isAdmin && (
           <Link
             to="/settings"
+            onClick={onClose}
             aria-current={active('/settings') ? 'page' : undefined}
             className={`flex items-center gap-[11px] h-control px-3 rounded-sm font-medium text-body border-none w-full transition-colors ${
               active('/settings')
@@ -112,7 +116,7 @@ export function Sidebar() {
           </div>
         </Link>
         <button
-          onClick={handleLogout}
+          onClick={() => setConfirmLogout(true)}
           title="Sign out"
           aria-label="Sign out"
           className="text-ink-nav-2 bg-transparent border-none p-2 rounded-sm grid place-items-center hover:bg-navy-pill hover:text-white transition-colors"
@@ -120,6 +124,19 @@ export function Sidebar() {
           <LogOut size={18} strokeWidth={1.75} />
         </button>
       </div>
+
+      {confirmLogout && (
+        <div className="fixed inset-0 bg-ink/45 z-modal grid place-items-center p-6" onClick={e => { if (e.target === e.currentTarget) setConfirmLogout(false) }}>
+          <div className="bg-card rounded shadow-pop w-full max-w-[380px] p-6">
+            <h3 className="text-[17px] font-bold text-ink">Sign out?</h3>
+            <p className="text-body text-ink-2 mt-2">Are you sure you want to log out?</p>
+            <div className="flex justify-end gap-[10px] mt-6">
+              <button onClick={() => setConfirmLogout(false)} className="btn btn-secondary btn-sm">Cancel</button>
+              <button onClick={handleLogout} className="btn btn-sm bg-[#B91C1C] text-white hover:bg-[#991B1B] border-transparent">Sign out</button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   )
 }

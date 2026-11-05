@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Upload, Search, ChevronDown, Check, RotateCcw, Trash2, FileText } from 'lucide-react'
+import { Upload, Search, ChevronDown, ChevronRight, Check, RotateCcw, Trash2, FileText } from 'lucide-react'
 import { documentsApi } from '../../api/documents'
 import { queryKeys } from '../../lib/queryKeys'
 import type { Document, DocumentVisibility } from '../../types/api'
@@ -18,6 +18,7 @@ export function DocumentsPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [visFilter, setVisFilter] = useState('')
 
+  const docsTableRef = useRef<HTMLDivElement>(null)
   const { data: docs = [], isLoading } = useQuery({
     queryKey: queryKeys.documents.list(),
     queryFn: documentsApi.list,
@@ -67,7 +68,7 @@ export function DocumentsPage() {
   })
 
   return (
-    <section className="px-10 py-8 pb-24 max-w-screen w-full">
+    <section className="px-4 py-6 pb-24 sm:px-10 sm:py-8 max-w-screen w-full">
       <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
         <div>
           <h1 className="text-page-title">Documents</h1>
@@ -142,7 +143,11 @@ export function DocumentsPage() {
       {isLoading ? (
         <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>
       ) : docs.length > 0 && (
-        <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]">
+        <div className="relative">
+          <button onClick={() => docsTableRef.current?.scrollBy({ left: 160, behavior: 'smooth' })} className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-line rounded-full w-6 h-6 grid place-items-center shadow-sm">
+            <ChevronRight size={13} className="text-ink-2" strokeWidth={2} />
+          </button>
+        <div ref={docsTableRef} className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]">
           <table className="w-full border-collapse min-w-[760px]">
             <thead>
               <tr>
@@ -159,6 +164,7 @@ export function DocumentsPage() {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
 

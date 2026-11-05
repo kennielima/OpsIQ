@@ -14,7 +14,7 @@
   }
   h1, h2, h3, h4, p { margin: 0; }
   a { @apply text-accent no-underline; }
-  a:hover { @apply underline; }
+  a:hover { @apply no-underline; }
   button { font-family: inherit; cursor: pointer; }
   :focus-visible {
     outline: 2px solid #2147D6;

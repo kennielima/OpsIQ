@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search, AlertTriangle, MessageSquare, RotateCcw, CheckCircle } from 'lucide-react'
+import { Search, AlertTriangle, MessageSquare, RotateCcw, CheckCircle, ArrowLeft } from 'lucide-react'
 import { conversationsApi } from '../../api/conversations'
 import { queryKeys } from '../../lib/queryKeys'
 import { useNavigate } from '@tanstack/react-router'
@@ -25,15 +25,15 @@ export function HistoryPage() {
   const filtered = convos.filter(c => c.question.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <section className="px-10 py-8 pb-24 max-w-screen w-full">
+    <section className="px-4 py-6 pb-24 sm:px-10 sm:py-8 max-w-screen w-full">
       <div className="mb-6">
         <h1 className="text-page-title">History</h1>
         <p className="text-body text-ink-2 mt-1">Every question asked in your workspace, with the answer and sources that were given.</p>
       </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: '300px 1fr', alignItems: 'start' }}>
-        {/* Left: list */}
-        <div className="card overflow-hidden flex flex-col gap-1 p-0">
+      <div className="grid gap-6 items-start grid-cols-1 sm:grid-cols-[300px_1fr]">
+        {/* Left: list — hidden on mobile when a conversation is selected */}
+        <div className={`card overflow-hidden flex flex-col gap-1 p-0 ${selectedId ? 'hidden sm:flex' : 'flex'}`}>
           <div className="relative p-3 border-b border-line">
             <Search size={16} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#9AA3B2]" strokeWidth={1.75} />
             <input className="inp pl-[38px] shadow-[0_1px_4px_rgba(16,24,40,.10),_0_1px_2px_rgba(16,24,40,.06)]" placeholder="Search past questions" value={search} onChange={e => setSearch(e.target.value)} />
@@ -67,8 +67,13 @@ export function HistoryPage() {
           </div>
         </div>
 
-        {/* Right: detail */}
-        <div className="card min-h-[300px]">
+        {/* Right: detail — hidden on mobile when nothing selected */}
+        <div className={`card min-h-[300px] ${!selectedId ? 'hidden sm:block' : 'block'}`}>
+          {selectedId && (
+            <button onClick={() => setSelectedId(null)} className="sm:hidden flex items-center gap-2 text-[13px] text-accent font-semibold px-5 pt-4 pb-0">
+              <ArrowLeft size={15} strokeWidth={2} />Back
+            </button>
+          )}
           {!selectedId ? (
             <div className="flex flex-col items-center justify-center py-20 text-center px-8">
               <MessageSquare size={32} className="text-ink-2 mb-3" strokeWidth={1.75} />

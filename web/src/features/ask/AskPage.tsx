@@ -47,7 +47,7 @@ export function AskPage() {
   }
 
   return (
-    <section className="px-10 py-8 pb-24 max-w-screen w-full">
+    <section className="px-4 py-6 pb-24 sm:px-10 sm:py-8 max-w-screen w-full">
       <div className="mb-6">
         <h1 className="text-page-title">Ask</h1>
         <p className="text-body text-ink-2 mt-1">
@@ -102,7 +102,7 @@ export function AskPage() {
 
       {/* Loading */}
       {state === 'loading' && (
-        <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: '1fr 340px' }}>
+        <div className="grid gap-5 mt-5 grid-cols-1 sm:grid-cols-[1fr_340px]">
           <div className="card p-[22px]">
             <span className="inline-flex items-center gap-2 text-ink-2 text-[12.5px]">
               <Clock size={17} className="text-accent" strokeWidth={1.75} />
@@ -133,7 +133,7 @@ export function AskPage() {
 
       {/* Answer */}
       {state === 'answer' && result && (
-        <div className="grid gap-5 mt-5" style={{ gridTemplateColumns: '1fr 340px', alignItems: 'start' }}>
+        <div className="grid gap-5 mt-5 items-start grid-cols-1 sm:grid-cols-[1fr_340px]">
           <AnswerCard result={result} onCite={handleCite} />
           <SourcesPanel citations={result.citations} activeCite={activeCite} srcRefs={srcRefs} />
         </div>

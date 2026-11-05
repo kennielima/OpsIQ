@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Key, Link, Code, Users, Plus, Check, X, Copy, AlertTriangle } from 'lucide-react'
+import { Key, Link, Code, Users, Plus, Check, X, Copy, AlertTriangle, ChevronRight } from 'lucide-react'
 import { settingsApi } from '../../api/settings'
 import { queryKeys } from '../../lib/queryKeys'
 import { addTeamMemberSchema, addOriginSchema, type AddTeamMemberInput, type AddOriginInput } from '../../lib/schemas'
@@ -12,7 +12,7 @@ export function SettingsPage() {
   const [newKey, setNewKey] = useState<CreateWidgetKeyResponse | null>(null)
 
   return (
-    <section className="px-10 py-8 pb-24 max-w-screen w-full">
+    <section className="px-4 py-6 pb-24 sm:px-10 sm:py-8 max-w-screen w-full">
       <div className="mb-6">
         <h1 className="text-page-title">Settings</h1>
         <p className="text-body text-ink-2 mt-1">Widget keys, allowed origins and team management. Visible to admins only.
@@ -84,6 +84,7 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
   const qc = useQueryClient()
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [showRevoked, setShowRevoked] = useState(false)
+  const keysTableRef = useRef<HTMLDivElement>(null)
   const { data: keys = [] } = useQuery({ queryKey: queryKeys.settings.widgetKeys(), queryFn: settingsApi.listWidgetKeys })
 
   const activeKeys = keys.filter(k => k.status === 'Active')
@@ -118,7 +119,11 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
           ))}
         </div>
       )}
-      <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
+      <div className="relative">
+        <button onClick={() => keysTableRef.current?.scrollBy({ left: 160, behavior: 'smooth' })} className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-line rounded-full w-6 h-6 grid place-items-center shadow-sm">
+          <ChevronRight size={13} className="text-ink-2" strokeWidth={2} />
+        </button>
+        <div ref={keysTableRef} className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
         <table className="w-full border-collapse min-w-[560px]">
           <thead>
             <tr>
@@ -148,6 +153,7 @@ function WidgetKeysSection({ onKeyCreated }: { onKeyCreated: (k: CreateWidgetKey
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {revokingId && (
@@ -251,6 +257,7 @@ function TeamSection() {
   const qc = useQueryClient()
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
   const [removingMember, setRemovingMember] = useState<TeamMember | null>(null)
+  const teamTableRef = useRef<HTMLDivElement>(null)
   const { data: members = [] } = useQuery({ queryKey: queryKeys.settings.team(), queryFn: settingsApi.listTeamMembers })
   const { register, handleSubmit, reset, formState: { errors } } = useForm<AddTeamMemberInput>({ resolver: zodResolver(addTeamMemberSchema) })
   const { mutate: addMember, isPending } = useMutation({
@@ -269,7 +276,7 @@ function TeamSection() {
   return (
     <SectionCard icon={<Users size={18} strokeWidth={1.75} />} title="Team" desc="Add teammates to this workspace. Admins manage settings; staff can ask questions and manage documents.">
       <form onSubmit={handleSubmit(d => addMember(d))}>
-        <div className="grid grid-cols-2 gap-[14px] max-w-[620px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-[14px] max-w-[620px]">
           <div className="field">
             <label htmlFor="tm-name">Full name</label>
             <input id="tm-name" className="inp" placeholder="Jordan Ellis" {...register('name')} />
@@ -301,7 +308,11 @@ function TeamSection() {
       </form>
 
       {members.length > 0 && (
-        <div className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)] mt-[22px]">
+        <div className="relative mt-[22px]">
+        <button onClick={() => teamTableRef.current?.scrollBy({ left: 160, behavior: 'smooth' })} className="sm:hidden absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white border border-line rounded-full w-6 h-6 grid place-items-center shadow-sm">
+          <ChevronRight size={13} className="text-ink-2" strokeWidth={2} />
+        </button>
+        <div ref={teamTableRef} className="overflow-x-auto border border-line rounded bg-card shadow-[0_1px_4px_rgba(16,24,40,.15),_0_1px_2px_rgba(16,24,40,.09)]">
           <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr>
@@ -337,6 +348,7 @@ function TeamSection() {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
 
