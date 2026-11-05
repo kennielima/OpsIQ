@@ -172,4 +172,35 @@ public class TenantsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("{tenantId}/users")]
+    [Authorize(Roles = "TenantAdmin")]
+    public async Task<IActionResult> GetUsers(Guid tenantId)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var users = await _userManager.Users
+            .Where(u => u.TenantId == tenantId)
+            .Select(u => new { u.Id, u.Email, u.DisplayName, u.Role })
+            .ToListAsync();
+
+        return Ok(users);
+    }
+
+    [HttpDelete("{tenantId}/users/{userId}")]
+    [Authorize(Roles = "TenantAdmin")]
+    public async Task<IActionResult> RemoveUser(Guid tenantId, Guid userId)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        if (user == null || user.TenantId != tenantId) return NotFound();
+
+        var result = await _userManager.DeleteAsync(user);
+        if (!result.Succeeded) return BadRequest(result.Errors.Select(e => e.Description));
+
+        return NoContent();
+    }
 }
