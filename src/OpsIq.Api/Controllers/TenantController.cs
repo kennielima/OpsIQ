@@ -127,49 +127,6 @@ public class TenantsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost]
-    [Route("{tenantId}/keys/sk")]
-    [Authorize(Roles = "TenantAdmin")]
-    public async Task<IActionResult> MintSecretKey(Guid tenantId)
-    {
-        var claimTenantId = User.FindFirst("TenantId")?.Value;
-        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
-
-        var randomBytes = RandomNumberGenerator.GetBytes(32);
-        var rawKey = "sk_" + Convert.ToBase64String(randomBytes)
-            .Replace("+", "-").Replace("/", "_").TrimEnd('=');
-        var hashed = ApiKeyAuthenticationHandler.HashApiKey(rawKey);
-
-        var apiKey = new ApiKey
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            HashedKey = hashed,
-            Type = ApiKeyType.SecretKey,
-            CreatedAt = DateTime.UtcNow
-        };
-        _context.ApiKeys.Add(apiKey);
-        await _context.SaveChangesAsync();
-        return Ok(new { apiKey.Id, RawKey = rawKey });
-    }
-
-    [HttpDelete]
-    [Route("{tenantId}/keys/sk/{keyId}")]
-    [Authorize(Roles = "TenantAdmin")]
-    public async Task<IActionResult> RevokeSecretKey(Guid tenantId, Guid keyId)
-    {
-        var claimTenantId = User.FindFirst("TenantId")?.Value;
-        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
-
-        var key = await _context.ApiKeys.FirstOrDefaultAsync(k => k.Id == keyId);
-        if (key == null) return NotFound();
-        if (key.Type != ApiKeyType.SecretKey) return BadRequest("Use the pk revoke endpoint for public keys.");
-
-        key.RevokedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return NoContent();
-    }
-
     [HttpPut("{tenantId}/origins")]
     [Authorize(Roles = "TenantAdmin")]
     public async Task<IActionResult> AddOrigins(Guid tenantId, [FromBody] string[] origins)
