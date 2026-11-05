@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthAskRouteImport } from './routes/_auth.ask'
 import { Route as AuthDocumentsRouteImport } from './routes/_auth.documents'
 import { Route as AuthHistoryRouteImport } from './routes/_auth.history'
+import { Route as AuthMeRouteImport } from './routes/_auth.me'
 import { Route as AuthNotAllowedRouteImport } from './routes/_auth.not-allowed'
 import { Route as AuthSettingsRouteImport } from './routes/_auth.settings'
 
@@ -47,6 +48,11 @@ const AuthHistoryRoute = AuthHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthMeRoute = AuthMeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthNotAllowedRoute = AuthNotAllowedRouteImport.update({
   id: '/not-allowed',
   path: '/not-allowed',
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/ask': typeof AuthAskRoute
   '/documents': typeof AuthDocumentsRoute
   '/history': typeof AuthHistoryRoute
+  '/me': typeof AuthMeRoute
   '/not-allowed': typeof AuthNotAllowedRoute
   '/settings': typeof AuthSettingsRoute
 }
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/ask': typeof AuthAskRoute
   '/documents': typeof AuthDocumentsRoute
   '/history': typeof AuthHistoryRoute
+  '/me': typeof AuthMeRoute
   '/not-allowed': typeof AuthNotAllowedRoute
   '/settings': typeof AuthSettingsRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/_auth/ask': typeof AuthAskRoute
   '/_auth/documents': typeof AuthDocumentsRoute
   '/_auth/history': typeof AuthHistoryRoute
+  '/_auth/me': typeof AuthMeRoute
   '/_auth/not-allowed': typeof AuthNotAllowedRoute
   '/_auth/settings': typeof AuthSettingsRoute
 }
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/ask'
     | '/documents'
     | '/history'
+    | '/me'
     | '/not-allowed'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/ask'
     | '/documents'
     | '/history'
+    | '/me'
     | '/not-allowed'
     | '/settings'
   id:
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/_auth/ask'
     | '/_auth/documents'
     | '/_auth/history'
+    | '/_auth/me'
     | '/_auth/not-allowed'
     | '/_auth/settings'
   fileRoutesById: FileRoutesById
@@ -168,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthHistoryRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/me': {
+      id: '/_auth/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AuthMeRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/not-allowed': {
       id: '/_auth/not-allowed'
       path: '/not-allowed'
@@ -189,6 +208,7 @@ interface AuthRouteChildren {
   AuthAskRoute: typeof AuthAskRoute
   AuthDocumentsRoute: typeof AuthDocumentsRoute
   AuthHistoryRoute: typeof AuthHistoryRoute
+  AuthMeRoute: typeof AuthMeRoute
   AuthNotAllowedRoute: typeof AuthNotAllowedRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
 }
@@ -197,6 +217,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthAskRoute: AuthAskRoute,
   AuthDocumentsRoute: AuthDocumentsRoute,
   AuthHistoryRoute: AuthHistoryRoute,
+  AuthMeRoute: AuthMeRoute,
   AuthNotAllowedRoute: AuthNotAllowedRoute,
   AuthSettingsRoute: AuthSettingsRoute,
 }

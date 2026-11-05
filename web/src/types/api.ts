@@ -7,10 +7,11 @@ export interface MeResponse {
   userId: string
   email: string
   role: string        // raw value from backend: "TenantAdmin" | "TenantUser" | "SuperAdmin"
-  tenantId: string
+  tenantId?: string   // legacy — prefer tenant.id
+  tenant?: { id: string; name: string; slug?: string }
   displayName?: string
   name?: string
-  tenantName?: string
+  tenantName?: string // legacy
 }
 
 // Matches the backend Document entity (camelCase serialization)

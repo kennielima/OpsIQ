@@ -56,7 +56,7 @@ export function Sidebar() {
           Workspace
         </div>
         <div className="text-body font-semibold text-white mt-[2px]">
-          {user?.tenantName ?? 'AcmePay'}
+          {(s => s.charAt(0).toUpperCase() + s.slice(1))(user?.tenant?.name ?? user?.tenantName ?? '—')}
         </div>
       </div>
 
@@ -100,20 +100,22 @@ export function Sidebar() {
 
       {/* User footer */}
       <div className="mt-auto pt-[14px] border-t border-navy-line flex items-center gap-[11px]">
-        <div className="w-9 h-9 rounded-full bg-[#24416F] text-[#CFE0FF] grid place-items-center font-bold text-[13px] flex-none">
-          {initials}
-        </div>
-        <div className="min-w-0">
-          <div className="text-[13.5px] font-semibold text-white truncate">
-            {displayName}
+        <Link to="/me" className="flex items-center gap-[11px] min-w-0 flex-1 rounded-sm px-1 py-1 hover:bg-navy-pill transition-colors">
+          <div className="w-9 h-9 rounded-full bg-[#24416F] text-[#CFE0FF] grid place-items-center font-bold text-[13px] flex-none">
+            {initials}
           </div>
-          <div className="text-label text-ink-nav-2">{user?.role === 'TenantAdmin' ? 'Admin' : 'Staff'}</div>
-        </div>
+          <div className="min-w-0">
+            <div className="text-[13.5px] font-semibold text-white truncate">
+              {displayName}
+            </div>
+            <div className="text-label text-ink-nav-2">{user?.role === 'TenantAdmin' ? 'Admin' : 'Staff'}</div>
+          </div>
+        </Link>
         <button
           onClick={handleLogout}
           title="Sign out"
           aria-label="Sign out"
-          className="ml-auto text-ink-nav-2 bg-transparent border-none p-2 rounded-sm grid place-items-center hover:bg-navy-pill hover:text-white transition-colors"
+          className="text-ink-nav-2 bg-transparent border-none p-2 rounded-sm grid place-items-center hover:bg-navy-pill hover:text-white transition-colors"
         >
           <LogOut size={18} strokeWidth={1.75} />
         </button>

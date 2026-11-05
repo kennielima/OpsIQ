@@ -2,9 +2,8 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Key, Link, Code, Users, Plus, Check, X, Copy, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-react'
+import { Key, Link, Code, Users, Plus, Check, X, Copy, AlertTriangle } from 'lucide-react'
 import { settingsApi } from '../../api/settings'
-import { authApi } from '../../api/auth'
 import { queryKeys } from '../../lib/queryKeys'
 import { addTeamMemberSchema, addOriginSchema, type AddTeamMemberInput, type AddOriginInput } from '../../lib/schemas'
 import type { CreateWidgetKeyResponse, TeamMember } from '../../types/api'
@@ -26,7 +25,6 @@ export function SettingsPage() {
         <AllowedOriginsSection />
         <EmbedSnippetSection />
         <TeamSection />
-        <ChangePasswordSection />
       </div>
 
       {newKey && <KeyCreatedModal keyData={newKey} onClose={() => setNewKey(null)} />}
@@ -451,51 +449,5 @@ function KeyCreatedModal({ keyData, onClose }: { keyData: CreateWidgetKeyRespons
         </div>
       </div>
     </div>
-  )
-}
-
-function ChangePasswordSection() {
-  const [showCurrent, setShowCurrent] = useState(false)
-  const [showNew, setShowNew] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<{ currentPassword: string; newPassword: string }>()
-
-  const { mutate, isPending } = useMutation({
-    mutationFn: authApi.resetPassword,
-    onSuccess: () => { setSuccess(true); setErrorMsg(null); reset(); setTimeout(() => setSuccess(false), 3000) },
-    onError: () => setErrorMsg('Current password is incorrect or the request failed.'),
-  })
-
-  return (
-    <SectionCard icon={<Lock size={18} strokeWidth={1.75} />} title="Change password" desc="Update the password for your account.">
-      <form onSubmit={handleSubmit(d => mutate(d))} className="grid gap-[14px] max-w-[420px]">
-        {errorMsg && <p className="text-[12px] text-fail-ink">{errorMsg}</p>}
-        {success && <p className="text-[12px] text-ok-ink">Password updated successfully.</p>}
-        <div className="field">
-          <label>Current password</label>
-          <div className="relative">
-            <input type={showCurrent ? 'text' : 'password'} className="inp pr-11" {...register('currentPassword', { required: true })} />
-            <button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink">
-              {showCurrent ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
-            </button>
-          </div>
-          {errors.currentPassword && <p className="text-[12px] text-fail-ink">Required</p>}
-        </div>
-        <div className="field">
-          <label>New password</label>
-          <div className="relative">
-            <input type={showNew ? 'text' : 'password'} className="inp pr-11" {...register('newPassword', { required: true, minLength: 8 })} />
-            <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-2 hover:text-ink">
-              {showNew ? <EyeOff size={17} strokeWidth={1.75} /> : <Eye size={17} strokeWidth={1.75} />}
-            </button>
-          </div>
-          {errors.newPassword && <p className="text-[12px] text-fail-ink">Min 8 characters</p>}
-        </div>
-        <div>
-          <button type="submit" disabled={isPending} className="btn btn-primary">{isPending ? 'Saving…' : 'Update password'}</button>
-        </div>
-      </form>
-    </SectionCard>
   )
 }

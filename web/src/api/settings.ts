@@ -5,8 +5,9 @@ import type { MeResponse, WidgetKey, CreateWidgetKeyResponse, TeamMember } from 
 
 function tenantId(): string {
   const me = queryClient.getQueryData<MeResponse>(queryKeys.me())
-  if (!me?.tenantId) throw new Error('No tenant context')
-  return me.tenantId
+  const id = me?.tenant?.id ?? me?.tenantId
+  if (!id) throw new Error('No tenant context')
+  return id
 }
 
 export const settingsApi = {
