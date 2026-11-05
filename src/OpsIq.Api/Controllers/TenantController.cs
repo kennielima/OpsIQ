@@ -145,6 +145,19 @@ public class TenantsController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{tenantId}/origins")]
+    [Authorize(Roles = "TenantAdmin")]
+    public async Task<IActionResult> GetOrigins(Guid tenantId)
+    {
+        var claimTenantId = User.FindFirst("TenantId")?.Value;
+        if (claimTenantId != tenantId.ToString()) return StatusCode(403, "Tenant ID mismatch.");
+
+        var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId);
+        if (tenant == null) return NotFound();
+
+        return Ok(tenant.AllowedOrigins ?? []);
+    }
+
     [HttpPut("{tenantId}/origins")]
     [Authorize(Roles = "TenantAdmin")]
     public async Task<IActionResult> AddOrigins(Guid tenantId, [FromBody] string[] origins)

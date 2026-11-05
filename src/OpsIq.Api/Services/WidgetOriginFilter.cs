@@ -26,7 +26,7 @@ public class WidgetOriginFilter : IAsyncActionFilter
         var origin = context.HttpContext.Request.Headers["Origin"].ToString();
         var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == Guid.Parse(tenantId));
 
-        if (tenant?.AllowedOrigins != null && !tenant.AllowedOrigins.Contains(origin))
+        if (tenant?.AllowedOrigins == null || (tenant?.AllowedOrigins != null && !tenant.AllowedOrigins.Contains(origin)))
         {
             context.Result = new ObjectResult("Origin not allowed.") { StatusCode = 403 };
             return;
